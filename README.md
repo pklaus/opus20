@@ -1,15 +1,20 @@
 
 ### Lufft Opus20
 
-This is a Python software to query the
+This is a *lufft_opus20*, a Python software to query the
 temperature/humidity/... measurement device
 Opus20 produced by Lufft.
 
+#### Requirements
+
+*lufft_opus20* depends (only) on Python version 3.2+.
+I thought about backporting it to Python 2.7+ but it's not done so far.
+
 #### Installing
 
-*lufft_opus20* can be installed via pip:
+This package can be installed via pip:
 
-    pip install --upgrade .
+    pip install --upgrade https://github.com/pklaus/lufft_opus20/archive/master.zip
 
 #### Running
 
