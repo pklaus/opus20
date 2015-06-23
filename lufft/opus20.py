@@ -26,16 +26,13 @@ class Opus20(object):
     def request_supported_channels(self):
         frame = Frame.from_payload(b"\x31\x10\x16")
         answer = self.query_frame(frame)
-        frame = Frame(answer)
-        assert frame.valid
-        assert frame.kind.code == '0x3110'
-        self.available_channels = frame.available_channels()
+        assert answer.kind.code == '0x3110'
+        self.available_channels = answer.available_channels()
 
     def channel_value(self, channel: int):
         data = b"\x23\x10" + struct.pack('<H', channel)
         query_frame = Frame.from_payload(data)
-        answer_frame = Frame(self.query_frame(query_frame))
-        assert answer_frame.valid
+        answer_frame = self.query_frame(query_frame)
         return answer_frame.online_data_request_single()
 
     def query_frame(self, frame):
@@ -44,13 +41,40 @@ class Opus20(object):
 
     def query_bytes(self, data : bytes):
         logger.info("Sending the following {} bytes now: {}".format(len(data), " ".join("{:02X}".format(byte) for byte in data)))
-        self.s.sendall(data)
-        data = self.s.recv(1024)
+        frame = None
+        num_tries = 3
+        while num_tries:
+            try:
+                self.s.sendall(data)
+                answer = self.s.recv(1024)
+                frame = Frame(answer)
+                frame.validate()
+                break
+            except IncompleteDataException:
+                logger.warning("received incomplete data; trying to get the remaining bytes.")
+                answer += self.s.recv(1024)
+                frame = Frame(answer)
+                frame.validate()
+                break
+            except FrameValidationException as e:
+                logger.warning("The frame couldn't be validated: " + str(e))
+            num_tries -= 1
+            logger.warning("remaining tries: {}".format(num_tries))
+        if not frame: raise NameError("Couldn't get a valid answer.")
         logger.info("Received the following {} bytes as answer: {}".format(len(data), " ".join("{:02X}".format(byte) for byte in data)))
-        return data
+        return frame
 
     def close(self):
         self.s.close()
+
+class Opus20Exception(NameError):
+    """ An exception concerning Opu20 """
+
+class FrameValidationException(Opus20Exception):
+    """ received invalid data """
+
+class IncompleteDataException(FrameValidationException):
+    """ received incomplete data """
 
 class Frame(object):
 
@@ -79,21 +103,22 @@ class Frame(object):
         frame.data = data
         return frame
 
-    @property
-    def valid(self):
+    def validate(self):
 
         data = self.data
 
         # check header
-        if data[0:6] != b"\x01\x10\x00\x00\x00\x00": raise NameError("l2p-header incorrect")
+        if data[0:6] != b"\x01\x10\x00\x00\x00\x00": raise FrameValidationException("l2p-header incorrect: " + str(data[0:6]))
 
         # length of payload
         length = data[6]
         logger.debug("length of payload={}".format(length))
-        if len(data) < 12 + length: raise NameError("message incomplete? Expected {} bytes, got {}. ".format(12+length, len(data)) + str(data))
+        if len(data) < 12 + length:
+            logger.warning("message incomplete? Expected {} bytes, got {}. ".format(12+length, len(data)) + str(data))
+            raise IncompleteDataException()
 
         # stx ok?
-        if data[7] != 0x02: raise NameError("l2p-stx incorrect")
+        if data[7] != 0x02: raise FrameValidationException("l2p-stx incorrect")
 
         # cmd/verc
         cmd = data[8]
@@ -105,7 +130,7 @@ class Frame(object):
         logger.debug("Payload=[" + ' '.join('{:02}'.format(byte) for byte in payload) + "]")
 
         # etx ok?
-        if data[8+length] != 0x03: raise NameError("l2p-etx incorrect")
+        if data[8+length] != 0x03: raise FrameValidationException("l2p-etx incorrect")
 
         # chksum ok?
         frame = data[0:9+length]
@@ -115,12 +140,12 @@ class Frame(object):
         chksum_found = data[9+length:9+length+2]
         if chksum_calc != chksum_found:
             logger.warning("Checksum: WRONG!")
-            raise NameError("l2p chksum incorrect: {} vs. {}".format(chksum_calc, chksum_found))
+            raise FrameValidationException("l2p chksum incorrect: {} vs. {}".format(chksum_calc, chksum_found))
         else:
             logger.debug("Checksum: OK")
 
         # eot ok?
-        if data[11+length] != 0x04: raise NameError("l2p-eot incorrect")
+        if data[11+length] != 0x04: raise FrameValidationException("l2p-eot incorrect")
 
         props = Object()
         props.cmd = cmd
@@ -152,11 +177,11 @@ class Frame(object):
     @property
     def props(self):
         """ returns an object containing the basic properties of the Frame.
-            This object is created when calling Frame.valid . """
+            This object is created when calling Frame.validate() . """
         try:
             return self._props
         except:
-            raise NameError('Props not available yet. Check Frame.valid first.')
+            raise NameError('Props not available yet. Check Frame.validate() first.')
 
     @property
     def kind(self):
