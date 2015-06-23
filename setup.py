@@ -9,7 +9,7 @@ License: GPLv3
 from distutils.core import setup
 
 setup(name='lufft_opus20',
-      version = '0.8.0',
+      version = '0.9.0',
       description = 'Interface to Lufft Opus20 devices',
       long_description = '',
       author = 'Philipp Klaus',
