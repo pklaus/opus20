@@ -110,7 +110,8 @@ class Frame(object):
         length = data[6]
         logger.debug("length of payload={}".format(length))
         if len(data) < 12 + length:
-            logger.warning("message incomplete? Expected {} bytes, got {}. ".format(12+length, len(data)) + str(data))
+            # This 'problem' can occur regularly, thus we don't use .warning() but .info()
+            logger.info("message incomplete? Expected {} bytes, got {}. ".format(12+length, len(data)) + str(data))
             raise IncompleteDataException()
 
         # stx ok?
