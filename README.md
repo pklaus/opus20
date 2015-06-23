@@ -23,11 +23,11 @@ Opus20 produced by Lufft.
   Ported the software to Python, extended and packaged it.
 * (c) 2012, [Ondics GmbH](http://www.ondics.de)  
   <githubler@ondics.de>  
-  The author of the [original scripts][] (written as Bash scripts + netcat & gawk)
+  The author of the [original scripts][l2p_bash_scripts] (written as Bash scripts + netcat & gawk)
 
 #### License
 
 GPLv3
 
-[original_scripts]: https://github.com/ondics/lufft-l2p-script-collection
+[l2p_bash_scripts]: https://github.com/ondics/lufft-l2p-script-collection
 
