@@ -48,11 +48,14 @@ def main():
             for channel in args.channel:
                 print("{:.3f}".format(o20.channel_value(channel)))
 
-    #except:
-    #    pass
+    except ConnectionRefusedError as e:
+        parser.error("Could not connect to host {}: {}".format(args.host, e))
 
     finally:
-        o20.close()
+        try:
+            o20.close()
+        except:
+            pass
     end = clock()
     logger.info("script running time (net): {:.6f} seconds.".format(end-start))
 
