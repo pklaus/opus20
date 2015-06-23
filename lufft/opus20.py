@@ -15,11 +15,7 @@ class Opus20(object):
         self.host = host
         self.port = port
 
-        s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        s.connect((self.host, self.port))
-        s.settimeout(timeout)
-        #s = socket.create_connection((self.host, self.port), timeout)
-        self.s = s
+        self.s = socket.create_connection((self.host, self.port), timeout)
 
         self.request_supported_channels()
 
@@ -51,7 +47,7 @@ class Opus20(object):
                 frame.validate()
                 break
             except IncompleteDataException:
-                logger.warning("received incomplete data; trying to get the remaining bytes.")
+                logger.info("received incomplete data; trying to get the remaining bytes.")
                 answer += self.s.recv(1024)
                 frame = Frame(answer)
                 frame.validate()
@@ -290,7 +286,7 @@ class Frame(object):
 
 
 def crc16(data : bytes):
-    """ Calculates the CRC16 checksum. data should be of type bytes() """
+    """ Calculates a CRC-16 CCITT checksum. data should be of type bytes() """
     # https://en.wikipedia.org/wiki/Cyclic_redundancy_check
     crc16_table = [
         0x0000, 0x1189, 0x2312, 0x329B, 0x4624, 0x57AD, 0x6536, 0x74BF,
