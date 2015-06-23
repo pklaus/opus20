@@ -1,0 +1,60 @@
+#!/usr/bin/env python
+
+import pdb
+import sys
+import time
+import argparse
+import logging
+
+from lufft import Opus20, OPUS20_CHANNEL_SPEC
+
+clock = time.perf_counter
+logger = logging.getLogger('opus_cli')
+
+def extended_int(string):
+    if string.startswith('0x'):
+        return int(string, 16)
+    else:
+        return int(string)
+
+def main():
+
+    parser = argparse.ArgumentParser(description="CLI for the Lufft Opus20")
+    parser.add_argument('host', help='hostname of the device')
+    parser.add_argument('--port', '-p', help='port for TCP connections')
+    parser.add_argument('--loglevel', '-l', choices=['CRITICAL', 'ERROR', 'WARNING', 'INFO', 'DEBUG'], help='log level')
+    subparsers = parser.add_subparsers(help='cmd help', dest='cmd')
+    parser_a = subparsers.add_parser('list', help='list all possible channels')
+    parser_b = subparsers.add_parser('get', help='get the value(s) of specific channel(s)')
+    parser_b.add_argument('channel', type=extended_int, nargs='+', help='The selected channel(s)')
+    args = parser.parse_args()
+
+    if not args.cmd: parser.error('please select a command')
+
+    if args.loglevel:
+        logging.basicConfig(level=getattr(logging, args.loglevel.upper()))
+
+    start = clock()
+    try:
+        if args.port:
+            o20 = Opus20(args.host, port=args.port)
+        else:
+            o20 = Opus20(args.host)
+
+        if args.cmd == 'list':
+            for channel in o20.available_channels:
+                print("Channel {} (0x{:04X}): {}".format(channel, channel, OPUS20_CHANNEL_SPEC[channel]))
+        if args.cmd == 'get':
+            for channel in args.channel:
+                print("{:.3f}".format(o20.channel_value(channel)))
+
+    #except:
+    #    pass
+
+    finally:
+        o20.close()
+    end = clock()
+    logger.info("script running time (net): {:.6f} seconds.".format(end-start))
+
+
+if __name__ == "__main__": main()
