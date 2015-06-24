@@ -78,6 +78,8 @@ class Frame(object):
     STX = b"\x02"
     ETX = b"\x03"
     EOT = b"\x04"
+    SHORT_FRAME = 0x10
+    LONG_FRAME  = 0x20
 
     def __init__(self, data=bytes()):
         self.data = data
@@ -103,38 +105,54 @@ class Frame(object):
 
         data = self.data
 
+        if len(data) < 12:
+            logger.info("message incomplete? Expected at least 12 bytes, got {}. ".format(len(data)))
+            raise IncompleteDataException()
+
+        frame_style = None
+        offset = 0
         # check header
-        if data[0:6] != b"\x01\x10\x00\x00\x00\x00": raise FrameValidationException("l2p-header incorrect: " + str(data[0:6]))
+        if data[0:6] == b"\x01\x10\x00\x00\x00\x00":
+            frame_style = self.SHORT_FRAME
+        elif data[0:6] == b"\x01\x20\x00\x00\x00\x00":
+            frame_style = self.LONG_FRAME
+        else:
+            raise FrameValidationException("l2p-header incorrect: " + str(data[0:6]))
 
         # length of payload
-        length = data[6]
+        length = 0
+        if frame_style == self.SHORT_FRAME:
+            length = data[6]
+        elif frame_style == self.LONG_FRAME:
+            length = struct.unpack('<H', data[6:8])[0]
+            offset += 1
         logger.debug("length of payload={}".format(length))
-        if len(data) < 12 + length:
+        if len(data) < 12 + offset + length:
             # This 'problem' can occur regularly, thus we don't use .warning() but .info()
             logger.info("message incomplete? Expected {} bytes, got {}. ".format(12+length, len(data)) + str(data))
             raise IncompleteDataException()
 
         # stx ok?
-        if data[7] != 0x02: raise FrameValidationException("l2p-stx incorrect")
+        if data[7+offset] != 0x02: raise FrameValidationException("l2p-stx incorrect")
 
         # cmd/verc
-        cmd = data[8]
-        verc = data[9]
+        cmd = data[8+offset]
+        verc = data[9+offset]
         logger.debug("CMD=[0x{:02X}] VERC=[0x{:02X}]".format(cmd, verc))
 
         # payload
-        payload = data[10:10+length-2]
+        payload = data[10+offset:10+offset+length-2]
         logger.debug("Payload=[" + hex_formatter(payload) + "]")
 
         # etx ok?
-        if data[8+length] != 0x03: raise FrameValidationException("l2p-etx incorrect")
+        if data[8+offset+length] != 0x03: raise FrameValidationException("l2p-etx incorrect")
 
         # chksum ok?
-        frame = data[0:9+length]
+        frame = data[0:9+offset+length]
         chksum_calc = crc16(frame)
         # The byte order is LO HI
         chksum_calc = bytes([chksum_calc & 0xFF, chksum_calc >> 8])
-        chksum_found = data[9+length:9+length+2]
+        chksum_found = data[9+offset+length:9+offset+length+2]
         if chksum_calc != chksum_found:
             logger.warning("Checksum: WRONG!")
             raise FrameValidationException("l2p chksum incorrect: {} vs. {}".format(chksum_calc, chksum_found))
@@ -142,13 +160,14 @@ class Frame(object):
             logger.debug("Checksum: OK")
 
         # eot ok?
-        if data[11+length] != 0x04: raise FrameValidationException("l2p-eot incorrect")
+        if data[11+offset+length] != 0x04: raise FrameValidationException("l2p-eot incorrect")
 
         props = Object()
         props.cmd = cmd
         props.verc = verc
         props.length = length
         props.payload = payload
+        props.frame_style = frame_style
         props.chksum_found = chksum_found
         self._props = props
 
