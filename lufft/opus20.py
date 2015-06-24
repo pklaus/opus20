@@ -36,7 +36,7 @@ class Opus20(object):
         return self.query_bytes(frame.data)
 
     def query_bytes(self, data : bytes):
-        logger.info("Sending the following {} bytes now: {}".format(len(data), " ".join("{:02X}".format(byte) for byte in data)))
+        logger.info("Sending the following {} bytes now: {}".format(len(data), hex_formatter(data)))
         frame = None
         num_tries = 3
         while num_tries:
@@ -57,7 +57,7 @@ class Opus20(object):
             num_tries -= 1
             logger.warning("remaining tries: {}".format(num_tries))
         if not frame: raise NameError("Couldn't get a valid answer.")
-        logger.info("Received the following {} bytes as answer: {}".format(len(data), " ".join("{:02X}".format(byte) for byte in data)))
+        logger.info("Received the following {} bytes as answer: {}".format(len(data), hex_formatter(data)))
         return frame
 
     def close(self):
@@ -124,7 +124,7 @@ class Frame(object):
 
         # payload
         payload = data[10:10+length-2]
-        logger.debug("Payload=[" + ' '.join('{:02}'.format(byte) for byte in payload) + "]")
+        logger.debug("Payload=[" + hex_formatter(payload) + "]")
 
         # etx ok?
         if data[8+length] != 0x03: raise FrameValidationException("l2p-etx incorrect")
@@ -259,7 +259,7 @@ class Frame(object):
             sub_length = props.payload[offset]
             logger.debug("SubLen={} ({})".format(sub_length, offset))
             sub_payload = props.payload[offset:offset+1+sub_length]
-            logger.debug("SubPayload: " + " ".join('{:02X}'.format(byte) for byte in sub_payload))
+            logger.debug("SubPayload: " + hex_formatter(sub_payload))
             offset += 1
 
             sub_status = props.payload[offset]
@@ -284,6 +284,10 @@ class Frame(object):
             values.append(value)
 
         return values
+
+
+def hex_formatter(raw: bytes):
+    return ' '.join('{:02X}'.format(byte) for byte in raw)
 
 
 def crc16(data : bytes):
