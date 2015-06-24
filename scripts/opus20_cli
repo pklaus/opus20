@@ -43,7 +43,7 @@ def main():
 
         if args.cmd == 'list':
             for channel in o20.available_channels:
-                print("Channel {} (0x{:04X}): {}".format(channel, channel, OPUS20_CHANNEL_SPEC[channel]))
+                print("Channel {:5d} (0x{:04X}): {}".format(channel, channel, OPUS20_CHANNEL_SPEC[channel]))
         if args.cmd == 'get':
             for channel in args.channel:
                 print("{:.3f}".format(o20.channel_value(channel)))
