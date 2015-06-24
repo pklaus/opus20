@@ -344,7 +344,7 @@ CHANNEL_SPEC = {
   165:   "AVG temperature       min=-4.0   max=122.0  unit=°F   type=FLOAT offset=0.0",
   110:   "CUR dewpoint          min=-85.0  max=50.0   unit=°C   type=FLOAT offset=0.0",
   130:   "MIN dewpoint          min=-85.0  max=50.0   unit=°C   type=FLOAT offset=0.0",
-  170:   "MAX dewpoint          min=-85.0  max=50.0   unit=°C   type=FLOAT offset=0.0",
+  150:   "MAX dewpoint          min=-85.0  max=50.0   unit=°C   type=FLOAT offset=0.0",
   170:   "AVG dewpoint          min=-85.0  max=50.0   unit=°C   type=FLOAT offset=0.0",
   115:   "CUR dewpoint          min=-121.0 max=122.0  unit=°F   type=FLOAT offset=0.0",
   135:   "MIN dewpoint          min=-121.0 max=122.0  unit=°F   type=FLOAT offset=0.0",
