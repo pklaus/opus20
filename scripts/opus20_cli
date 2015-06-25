@@ -21,7 +21,8 @@ def main():
 
     parser = argparse.ArgumentParser(description="CLI for the Lufft Opus20")
     parser.add_argument('host', help='hostname of the device')
-    parser.add_argument('--port', '-p', help='port for TCP connections')
+    parser.add_argument('--port', '-p', type=int, help='port for TCP connections')
+    parser.add_argument('--timeout', '-t', type=float, help='timeout for the TCP connection')
     parser.add_argument('--loglevel', '-l', choices=['CRITICAL', 'ERROR', 'WARNING', 'INFO', 'DEBUG'], help='log level')
     subparsers = parser.add_subparsers(help='cmd help', dest='cmd')
     parser_a = subparsers.add_parser('list', help='list all possible channels')
@@ -36,10 +37,10 @@ def main():
 
     start = clock()
     try:
-        if args.port:
-            o20 = Opus20(args.host, port=args.port)
-        else:
-            o20 = Opus20(args.host)
+        kwargs = {}
+        if args.port: kwargs['port'] = args.port
+        if args.timeout: kwargs['timeout'] = args.timeout
+        o20 = Opus20(args.host, **kwargs)
 
         if args.cmd == 'list':
             for channel in o20.available_channels:
