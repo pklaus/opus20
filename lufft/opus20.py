@@ -20,14 +20,12 @@ class Opus20(object):
         self.request_supported_channels()
 
     def request_supported_channels(self):
-        frame = Frame.from_payload(b"\x31\x10\x16")
+        frame = Frame.from_cmd_and_payload(0x31, b"\x16")
         answer = self.query_frame(frame)
-        assert answer.kind.code == '0x3110'
         self.available_channels = answer.available_channels()
 
     def channel_value(self, channel: int):
-        data = b"\x23\x10" + struct.pack('<H', channel)
-        query_frame = Frame.from_payload(data)
+        query_frame = Frame.from_cmd_and_payload(0x23, struct.pack('<H', channel))
         answer_frame = self.query_frame(query_frame)
         return answer_frame.online_data_request_single()
 
@@ -74,7 +72,9 @@ class IncompleteDataException(FrameValidationException):
 
 class Frame(object):
 
-    HEADER = b"\x01\x10\x00\x00\x00\x00"
+    HEADER_SHORT = b"\x01\x10\x00\x00\x00\x00"
+    HEADER_LONG = b"\x01\x20\x00\x00\x00\x00"
+
     STX = b"\x02"
     ETX = b"\x03"
     EOT = b"\x04"
@@ -85,12 +85,11 @@ class Frame(object):
         self.data = data
 
     @classmethod
-    def from_payload(cls, payload):
-
-        data = cls.HEADER
-        data += bytes([len(payload)])
+    def from_cmd_and_payload(cls, cmd, payload, verc=0x10):
+        data = cls.HEADER_SHORT
+        data += bytes([2+len(payload)])
         data += cls.STX
-        data += payload
+        data += bytes([cmd, verc]) + payload
         data += cls.ETX
         crc = crc16(data)
         # The byte order is LO HI
@@ -112,9 +111,9 @@ class Frame(object):
         frame_style = None
         offset = 0
         # check header
-        if data[0:6] == b"\x01\x10\x00\x00\x00\x00":
+        if data[0:6] == self.HEADER_SHORT:
             frame_style = self.SHORT_FRAME
-        elif data[0:6] == b"\x01\x20\x00\x00\x00\x00":
+        elif data[0:6] == self.HEADER_LONG:
             frame_style = self.LONG_FRAME
         else:
             raise FrameValidationException("l2p-header incorrect: " + str(data[0:6]))
@@ -199,16 +198,98 @@ class Frame(object):
         except:
             raise NameError('Props not available yet. Check Frame.validate() first.')
 
+
     @property
     def kind(self):
+        FRAME_KINDS = [
+          #
+          Object(cmd=0x1E, payload_check=[],            payload_length=   0, name='network discovery request'),
+          Object(cmd=0x1E, payload_check=[],            payload_length=  35, name='network discovery answer'),
+          #
+          Object(cmd=0x23, payload_check=[],            payload_length=   2, name='online single channel request'),
+          Object(cmd=0x23, payload_check=[0x00,],       payload_length=   8, name='online single channel answer',               func=self.online_data_request_single),
+          #
+          Object(cmd=0x24, payload_check=[0x10,],       payload_length=  10, name='initiate log download request'),
+          Object(cmd=0x24, payload_check=[0x00, 0x10],  payload_length=  10, name='initiate log download answer'),
+          #
+          Object(cmd=0x24, payload_check=[0x20, 0x01],  payload_length=   2, name='log download data request'),
+          Object(cmd=0x24, payload_check=[0x00, 0x20],  payload_length=None, name='log download data answer'),
+          #
+          Object(cmd=0x27, payload_check=[],            payload_length=   8, name='update time request'),
+          Object(cmd=0x27, payload_check=[0x00,],       payload_length=   1, name='update time answer'),
+          #
+          Object(cmd=0x2F, payload_check=[],            payload_length=   2, name='online multiple channel request'),
+          Object(cmd=0x2F, payload_check=[0x00,],       payload_length=None, name='online multiple channel answer',             func=self.online_data_request_multiple),
+          #
+          Object(cmd=0x31, payload_check=[0x16,],       payload_length=   1, name='channel list request'),
+          Object(cmd=0x31, payload_check=[0x00, 0x16,], payload_length=None, name='channel list answer',                        func=self.available_channels),
+          #
+          Object(cmd=0x31, payload_check=[0x17,],       payload_length=   1, name='channel group list request'),
+          Object(cmd=0x31, payload_check=[0x00, 0x17,], payload_length=None, name='channel group list answer'),
+          #
+          Object(cmd=0x31, payload_check=[0x30,],       payload_length=   3, name='information on specific channel request'),
+          Object(cmd=0x31, payload_check=[0x00, 0x30,], payload_length=  85, name='information on specific channel answer'),
+          #
+          Object(cmd=0x31, payload_check=[0x10,],       payload_length=   1, name='advanced status request 0x10 (?)'),
+          Object(cmd=0x31, payload_check=[0x00, 0x10,], payload_length=None, name='advanced status answer 0x10 (?)'),
+          #
+          Object(cmd=0x31, payload_check=[0x13,],       payload_length=   1, name='advanced status request 0x13 (?)'),
+          Object(cmd=0x31, payload_check=[0x00, 0x13,], payload_length=None, name='advanced status answer 0x13 (?)'),
+          #
+          Object(cmd=0x31, payload_check=[0x60,],       payload_length=   1, name='device status request'),
+          Object(cmd=0x31, payload_check=[0x00, 0x60,], payload_length=  10, name='device status answer'),
+          #
+          Object(cmd=0x44, payload_check=[0x12,],       payload_length=   2, name='[r] value range of channel group request'),
+          Object(cmd=0x44, payload_check=[0x00, 0x12],  payload_length=  18, name='[r] value range of channel group answer'),
+          #
+          Object(cmd=0x44, payload_check=[0x22,],       payload_length=   3, name='[r] enable/disable logging of specific channel request'),
+          Object(cmd=0x44, payload_check=[0x00, 0x22],  payload_length=   5, name='[r] enable/disable logging of specific channel answer'),
+          Object(cmd=0x45, payload_check=[0x22,],       payload_length=   4, name='[w] enable/disable logging of specific channel request'),
+          Object(cmd=0x45, payload_check=[0x00, 0x22],  payload_length=   6, name='[w] enable/disable logging of specific channel answer'),
+          #
+          Object(cmd=0x44, payload_check=[0x41,],       payload_length=   1, name='[r] measuring/logging interval request'),
+          Object(cmd=0x44, payload_check=[0x00, 0x41],  payload_length=  14, name='[r] measuring/logging interval answer'),
+          Object(cmd=0x45, payload_check=[0x41,],       payload_length=   9, name='[w] measuring/logging interval request'),
+          Object(cmd=0x45, payload_check=[0x00, 0x41],  payload_length=   8, name='[w] measuring/logging interval answer'),
+          #
+          Object(cmd=0x44, payload_check=[0x43,],       payload_length=   1, name='[r] enable/disable logging request'),
+          Object(cmd=0x44, payload_check=[0x00, 0x43],  payload_length=   3, name='[r] enable/disable logging answer'),
+          Object(cmd=0x45, payload_check=[0x43,],       payload_length=   2, name='[w] enable/disable logging request'),
+          Object(cmd=0x45, payload_check=[0x00,],       payload_length=   1, name='[w] enable/disable logging answer'),
+          #
+          Object(cmd=0x46, payload_check=[],            payload_length=   0, name='clear log request'),
+          Object(cmd=0x46, payload_check=[0x00,],       payload_length=   1, name='clear log answer'),
+          #
+          ## Commands I don't understand right now:
+          # 31/31 : channel group specific, a 2+1+1+n-byte answer, the n-bytes are counting upwards
+          # 44/11 : channel group specific, a 2+1+1-byte answer (single flat?)
+          # 44/13 : channel group specific, a 2+1+1+4-byte answer with a float value of 0.0
+          # 44/21 : channel group specific, 2+81-byte answer with mostly 0x00 values
+          # 44/31 : global, 2+80-byte answer with mostly 0x00 values
+          # 44/61 : global, a 2+1-byte answer with 0x00 (single flag?)
+          # 44/62 : global, a 2+1-byte answer with 0x00 (single flag?)
+          # 44/70 : global, a 2+2-byte answer with 0x00 0x00
+          # 44/81 : global, contains the device ID like 31/60
+        ]
+
         props = self.props
-        code = '0x{:02X}{:02X}'.format(props.cmd, props.verc)
-        if props.cmd == 0x31 and props.verc == 0x10:
-            return Object(code=code, name='available channels message', func=self.available_channels)
-        if props.cmd == 0x23 and props.verc == 0x10:
-            return Object(code=code, name='online channels message, single channel', func=self.online_data_request_single)
-        if props.cmd == 0x2F and props.verc == 0x10:
-            return Object(code=code, name='online channels message, multiple channels', func=self.online_data_request_multiple)
+
+        # all frames I have seen so far use verc = 0x10
+        if props.verc != 0x10: return None
+
+        for knd in FRAME_KINDS:
+            if knd.cmd != props.cmd: continue
+            if knd.payload_length != None and knd.payload_length != len(props.payload):
+                continue
+            if len(knd.payload_check) > len(props.payload): continue
+            payload_matches = True
+            for i in range(len(knd.payload_check)):
+                ref_byte = knd.payload_check[i]
+                check_byte = props.payload[i]
+                if ref_byte != None and ref_byte != check_byte:
+                    payload_matches = False
+                    break
+            if payload_matches: return knd
         return None
 
     def available_channels(self):
