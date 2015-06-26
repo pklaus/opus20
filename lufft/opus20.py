@@ -23,7 +23,6 @@ class Opus20(object):
 
         self.request_supported_channels()
         self.request_device_status()
-        self.disconnect()
 
     def connect(self):
         self.s = socket.create_connection((self.host, self.port), self.timeout)
