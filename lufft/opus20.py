@@ -478,7 +478,10 @@ class Frame(object):
             if status != 0: raise FrameValidationException('Bad status of channel value: 0x'+hex(status))
 
         channel = buf[offset] + (buf[offset+1] << 8)
-        logger.info("channel: {} ({:04X}) {}".format(channel, channel, CHANNEL_SPEC[channel]))
+        if channel in CHANNEL_SPEC:
+            logger.info("channel: {} ({:04X}) {}".format(channel, channel, CHANNEL_SPEC[channel]['name']))
+        else:
+            logger.info("channel: {} ({:04X}) unknown?!".format(channel, channel))
         offset += 2
 
         dtype = buf[offset]
@@ -541,42 +544,42 @@ def crc16(data : bytes):
     return crc_buff
 
 CHANNEL_SPEC = {
-  100:   "CUR temperature       min=-20.0  max=50.0   unit=°C   type=FLOAT offset=±10.0",
-  120:   "MIN temperature       min=-20.0  max=50.0   unit=°C   type=FLOAT offset=±10.0",
-  140:   "MAX temperature       min=-20.0  max=50.0   unit=°C   type=FLOAT offset=±10.0",
-  160:   "AVG temperature       min=-20.0  max=50.0   unit=°C   type=FLOAT offset=±10.0",
-  105:   "CUR temperature       min=-4.0   max=122.0  unit=°F   type=FLOAT offset=0.0",
-  125:   "MIN temperature       min=-4.0   max=122.0  unit=°F   type=FLOAT offset=0.0",
-  145:   "MAX temperature       min=-4.0   max=122.0  unit=°F   type=FLOAT offset=0.0",
-  165:   "AVG temperature       min=-4.0   max=122.0  unit=°F   type=FLOAT offset=0.0",
-  110:   "CUR dewpoint          min=-85.0  max=50.0   unit=°C   type=FLOAT offset=0.0",
-  130:   "MIN dewpoint          min=-85.0  max=50.0   unit=°C   type=FLOAT offset=0.0",
-  150:   "MAX dewpoint          min=-85.0  max=50.0   unit=°C   type=FLOAT offset=0.0",
-  170:   "AVG dewpoint          min=-85.0  max=50.0   unit=°C   type=FLOAT offset=0.0",
-  115:   "CUR dewpoint          min=-121.0 max=122.0  unit=°F   type=FLOAT offset=0.0",
-  135:   "MIN dewpoint          min=-121.0 max=122.0  unit=°F   type=FLOAT offset=0.0",
-  155:   "MAX dewpoint          min=-121.0 max=122.0  unit=°F   type=FLOAT offset=0.0",
-  175:   "AVG dewpoint          min=-121.0 max=122.0  unit=°F   type=FLOAT offset=0.0",
-  200:   "CUR relative_humidity min=0.0    max=100.0  unit=%    type=FLOAT offset=±30.0",
-  220:   "MIN relative_humidity min=0.0    max=100.0  unit=%    type=FLOAT offset=±30.0",
-  240:   "MAX relative_humidity min=0.0    max=100.0  unit=%    type=FLOAT offset=±30.0",
-  260:   "AVG relative_humidity min=0.0    max=100.0  unit=%    type=FLOAT offset=±30.0",
-  205:   "CUR absolute_humidity min=0.0    max=85.0   unit=g/m³ type=FLOAT offset=0.0",
-  225:   "MIN absolute_humidity min=0.0    max=85.0   unit=g/m³ type=FLOAT offset=0.0",
-  245:   "MAX absolute_humidity min=0.0    max=85.0   unit=g/m³ type=FLOAT offset=0.0",
-  265:   "AVG absolute_humidity min=0.0    max=85.0   unit=g/m³ type=FLOAT offset=0.0",
-  300:   "CUR abs. air pressure min=300.0  max=1200.0 unit=hPa  type=FLOAT offset=±10.0",
-  320:   "MIN abs. air pressure min=300.0  max=1200.0 unit=hPa  type=FLOAT offset=±10.0",
-  340:   "MAX abs. air pressure min=300.0  max=1200.0 unit=hPa  type=FLOAT offset=±10.0",
-  360:   "AVG abs. air pressure min=300.0  max=1200.0 unit=hPa  type=FLOAT offset=±10.0",
-  305:   "CUR abs. air pressure min=300.0  max=1200.0 unit=hPa  type=FLOAT offset=0.0",
-  325:   "MIN abs. air pressure min=300.0  max=1200.0 unit=hPa  type=FLOAT offset=0.0",
-  345:   "MAX abs. air pressure min=300.0  max=1200.0 unit=hPa  type=FLOAT offset=0.0",
-  365:   "AVG abs. air pressure min=300.0  max=1200.0 unit=hPa  type=FLOAT offset=0.0",
-  10020: "CUR battery voltage   min=0.0    max=6.5    unit=V    type=FLOAT offset=0.0",
-  10040: "MIN battery voltage   min=0.0    max=6.5    unit=V    type=FLOAT offset=0.0",
-  10060: "MAX battery voltage   min=0.0    max=6.5    unit=V    type=FLOAT offset=0.0",
-  10080: "AVG battery voltage   min=0.0    max=6.5    unit=V    type=FLOAT offset=0.0",
+  100:   {'name': 'CUR temperature',        'unit': '°C',    'offset' : '±10.0', },
+  120:   {'name': 'MIN temperature',        'unit': '°C',    'offset' : '±10.0', },
+  140:   {'name': 'MAX temperature',        'unit': '°C',    'offset' : '±10.0', },
+  160:   {'name': 'AVG temperature',        'unit': '°C',    'offset' : '±10.0', },
+  105:   {'name': 'CUR temperature',        'unit': '°F',    'offset' : '0.0',   },
+  125:   {'name': 'MIN temperature',        'unit': '°F',    'offset' : '0.0',   },
+  145:   {'name': 'MAX temperature',        'unit': '°F',    'offset' : '0.0',   },
+  165:   {'name': 'AVG temperature',        'unit': '°F',    'offset' : '0.0',   },
+  110:   {'name': 'CUR dewpoint',           'unit': '°C',    'offset' : '0.0',   },
+  130:   {'name': 'MIN dewpoint',           'unit': '°C',    'offset' : '0.0',   },
+  150:   {'name': 'MAX dewpoint',           'unit': '°C',    'offset' : '0.0',   },
+  170:   {'name': 'AVG dewpoint',           'unit': '°C',    'offset' : '0.0',   },
+  115:   {'name': 'CUR dewpoint',           'unit': '°F',    'offset' : '0.0',   },
+  135:   {'name': 'MIN dewpoint',           'unit': '°F',    'offset' : '0.0',   },
+  155:   {'name': 'MAX dewpoint',           'unit': '°F',    'offset' : '0.0',   },
+  175:   {'name': 'AVG dewpoint',           'unit': '°F',    'offset' : '0.0',   },
+  200:   {'name': 'CUR relative humidity',  'unit': '%',     'offset' : '±30.0', },
+  220:   {'name': 'MIN relative humidity',  'unit': '%',     'offset' : '±30.0', },
+  240:   {'name': 'MAX relative humidity',  'unit': '%',     'offset' : '±30.0', },
+  260:   {'name': 'AVG relative humidity',  'unit': '%',     'offset' : '±30.0', },
+  205:   {'name': 'CUR absolute humidity',  'unit': 'g/m³',  'offset' : '0.0',   },
+  225:   {'name': 'MIN absolute humidity',  'unit': 'g/m³',  'offset' : '0.0',   },
+  245:   {'name': 'MAX absolute humidity',  'unit': 'g/m³',  'offset' : '0.0',   },
+  265:   {'name': 'AVG absolute humidity',  'unit': 'g/m³',  'offset' : '0.0',   },
+  300:   {'name': 'CUR abs. air pressure',  'unit': 'hPa',   'offset' : '±10.0', },
+  320:   {'name': 'MIN abs. air pressure',  'unit': 'hPa',   'offset' : '±10.0', },
+  340:   {'name': 'MAX abs. air pressure',  'unit': 'hPa',   'offset' : '±10.0', },
+  360:   {'name': 'AVG abs. air pressure',  'unit': 'hPa',   'offset' : '±10.0', },
+  305:   {'name': 'CUR abs. air pressure',  'unit': 'hPa',   'offset' : '0.0',   },
+  325:   {'name': 'MIN abs. air pressure',  'unit': 'hPa',   'offset' : '0.0',   },
+  345:   {'name': 'MAX abs. air pressure',  'unit': 'hPa',   'offset' : '0.0',   },
+  365:   {'name': 'AVG abs. air pressure',  'unit': 'hPa',   'offset' : '0.0',   },
+  10020: {'name': 'CUR battery voltage',    'unit': 'V',     'offset' : '0.0',   },
+  10040: {'name': 'MIN battery voltage',    'unit': 'V',     'offset' : '0.0',   },
+  10060: {'name': 'MAX battery voltage',    'unit': 'V',     'offset' : '0.0',   },
+  10080: {'name': 'AVG battery voltage',    'unit': 'V',     'offset' : '0.0',   },
 }
 STATUS_WORDS = {
   0x00: {'name': "OK",                 'descr': "command successful"},
