@@ -51,6 +51,35 @@ class Opus20(object):
             return False
         return True
 
+    def query_frame(self, frame):
+        assert type(frame) == Frame
+        return self.query_bytes(frame.data)
+
+    def query_bytes(self, data : bytes):
+        if not self.connected: self.connect()
+        logger.debug("Sending the following {} bytes now: {}".format(len(data), hex_formatter(data)))
+        frame = None
+        num_tries = 3
+        while num_tries:
+            try:
+                self.s.sendall(data)
+                answer = self.s.recv(1024)
+                frame = Frame(answer)
+                frame.validate()
+                break
+            except IncompleteDataException:
+                answer += self.s.recv(1024)
+                frame = Frame(answer)
+                frame.validate()
+                break
+            except FrameValidationException as e:
+                logger.warning("The frame couldn't be validated: " + str(e))
+            num_tries -= 1
+            logger.warning("remaining tries: {}".format(num_tries))
+        if not frame.props: raise NameError("Couldn't get a valid answer.")
+        logger.debug("Received the following {} bytes as answer: {}".format(len(frame.data), hex_formatter(frame.data)))
+        return frame
+
     def request_supported_channels(self):
         frame = Frame.from_cmd_and_payload(0x31, b"\x16")
         answer = self.query_frame(frame)
@@ -87,35 +116,6 @@ class Opus20(object):
             data_answer_frame.validate()
             data += data_answer_frame.kind.func()
         return data
-
-    def query_frame(self, frame):
-        assert type(frame) == Frame
-        return self.query_bytes(frame.data)
-
-    def query_bytes(self, data : bytes):
-        if not self.connected: self.connect()
-        logger.debug("Sending the following {} bytes now: {}".format(len(data), hex_formatter(data)))
-        frame = None
-        num_tries = 3
-        while num_tries:
-            try:
-                self.s.sendall(data)
-                answer = self.s.recv(1024)
-                frame = Frame(answer)
-                frame.validate()
-                break
-            except IncompleteDataException:
-                answer += self.s.recv(1024)
-                frame = Frame(answer)
-                frame.validate()
-                break
-            except FrameValidationException as e:
-                logger.warning("The frame couldn't be validated: " + str(e))
-            num_tries -= 1
-            logger.warning("remaining tries: {}".format(num_tries))
-        if not frame.props: raise NameError("Couldn't get a valid answer.")
-        logger.debug("Received the following {} bytes as answer: {}".format(len(frame.data), hex_formatter(frame.data)))
-        return frame
 
 class Opus20Exception(NameError):
     """ An exception concerning Opu20 """
