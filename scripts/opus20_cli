@@ -6,7 +6,7 @@ import time
 import argparse
 import logging
 
-from lufft import Opus20, OPUS20_CHANNEL_SPEC
+from lufft import Opus20, OPUS20_CHANNEL_SPEC, PickleStore
 
 clock = time.perf_counter
 logger = logging.getLogger('opus_cli')
@@ -28,6 +28,8 @@ def main():
     parser_a = subparsers.add_parser('list', help='list all possible channels')
     parser_b = subparsers.add_parser('get', help='get the value(s) of specific channel(s)')
     parser_b.add_argument('channel', type=extended_int, nargs='+', help='The selected channel(s)')
+    parser_c = subparsers.add_parser('download', help='download the logs')
+    parser_c.add_argument('persistance_file', help='file to store the logs in')
     args = parser.parse_args()
 
     if not args.cmd: parser.error('please select a command')
@@ -48,6 +50,15 @@ def main():
         if args.cmd == 'get':
             for channel in args.channel:
                 print("{:.3f}".format(o20.channel_value(channel)))
+        if args.cmd == 'download':
+            ps = PickleStore(args.persistance_file)
+            try:
+                max_ts = ps.max_ts()[o20.device_id]
+            except KeyError:
+                max_ts = None
+            log_data = o20.download_logs(start_datetime=max_ts)
+            ps.add_data(o20.device_id, log_data)
+            ps.persist()
 
     except ConnectionRefusedError as e:
         parser.error("Could not connect to host {}: {}".format(args.host, e))

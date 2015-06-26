@@ -5,7 +5,8 @@ import pdb
 import struct
 import time
 import logging
-from datetime import datetime
+from datetime import datetime, timedelta
+import pickle
 
 logger = logging.getLogger(__name__)
 
@@ -20,15 +21,44 @@ class Opus20(object):
 
         self.request_supported_channels()
 
+        self.request_device_status()
+
     def request_supported_channels(self):
         frame = Frame.from_cmd_and_payload(0x31, b"\x16")
         answer = self.query_frame(frame)
         self.available_channels = answer.available_channels()
 
+    def request_device_status(self):
+        frame = Frame.from_cmd_and_payload(0x31, b"\x60")
+        answer = self.query_frame(frame)
+        self.device_id = ''.join("{:02X}".format(byte) for byte in answer.props.payload[2:2+6])
+        logger.info("Connected to device with ID: " + self.device_id)
+
     def channel_value(self, channel: int):
         query_frame = Frame.from_cmd_and_payload(0x23, struct.pack('<H', channel))
         answer_frame = self.query_frame(query_frame)
         return answer_frame.online_data_request_single()
+
+    def download_logs(self, start_datetime=None):
+        if start_datetime:
+            # We convert to UNIX time and add one second
+            # ( otherwise the same 'last' datapoint could be fetched
+            #   and stored multiple times for subsequent calls. )
+            ts = int(start_datetime.timestamp()) + 1
+        else:
+            ts = 0
+        init_frame = Frame.from_cmd_and_payload(0x24, b'\x10' + struct.pack('<i', ts) + b'\x00\x00\x00\x00\x00')
+        init_answer_frame = self.query_frame(init_frame)
+        init_answer_frame.validate()
+        init_answer_frame.kind
+        num_answer_frames = struct.unpack('<I', init_answer_frame.props.payload[2:2+4])[0]
+        data_request_frame = Frame.from_cmd_and_payload(0x24, b'\x20\x01')
+        data = []
+        for i in range(num_answer_frames):
+            data_answer_frame = self.query_frame(data_request_frame)
+            data_answer_frame.validate()
+            data += data_answer_frame.kind.func()
+        return data
 
     def query_frame(self, frame):
         assert type(frame) == Frame
@@ -70,6 +100,60 @@ class FrameValidationException(Opus20Exception):
 
 class IncompleteDataException(FrameValidationException):
     """ received incomplete data """
+
+class LogStore(object):
+
+    def __init__(self):
+        raise NotImplementedError()
+
+    def max_ts(self):
+        raise NotImplementedError()
+
+    def get_device_ids(self):
+        raise NotImplementedError()
+
+    def get_data(self, device_id=None):
+        raise NotImplementedError()
+
+    def add_data(self):
+        raise NotImplementedError()
+
+    def persist(self):
+        raise NotImplementedError()
+
+class PickleStore(LogStore):
+
+    def __init__(self, pickle_file: str):
+        self.pickle_file = pickle_file
+
+        try:
+            with open(self.pickle_file, 'rb') as f:
+                self._data = pickle.load(f)
+        except FileNotFoundError:
+            self._data = {}
+
+    def max_ts(self):
+        max_ts = dict()
+        for device_id in self._data:
+            ts_list = [entry['ts'] for entry in self._data[device_id]]
+            max_ts[device_id] = max(ts_list)
+        return max_ts
+
+    def get_device_ids(self):
+        return self._data.keys()
+
+    def get_data(self, device_id=None):
+        if not device_id: return self._data
+        return self._data[device_id]
+
+    def add_data(self, device_id, new_data):
+        if device_id not in self._data:
+            self._data[device_id] = []
+        self._data[device_id] += new_data
+
+    def persist(self):
+        with open(self.pickle_file, 'wb') as f:
+            pickle.dump(self._data, f, pickle.HIGHEST_PROTOCOL)
 
 class Frame(object):
 
@@ -214,7 +298,7 @@ class Frame(object):
           Object(cmd=0x24, payload_check=[0x00, 0x10],  payload_length=  10, name='initiate log download answer'),
           #
           Object(cmd=0x24, payload_check=[0x20, 0x01],  payload_length=   2, name='log download data request'),
-          Object(cmd=0x24, payload_check=[0x00, 0x20],  payload_length=None, name='log download data answer'),
+          Object(cmd=0x24, payload_check=[0x00, 0x20],  payload_length=None, name='log download data answer',                   func=self.get_log_data),
           #
           Object(cmd=0x27, payload_check=[],            payload_length=   8, name='update time request'),
           Object(cmd=0x27, payload_check=[0x00,],       payload_length=   1, name='update time answer'),
@@ -351,6 +435,33 @@ class Frame(object):
             values.append(channel_value.value)
 
         return values
+
+    def get_log_data(self):
+        props = self.props
+
+        assert props.length >= 21, 'message too short for a log data message'
+        assert props.cmd == 0x24 and props.verc == 0x10 and props.payload[0:2] == b"\x00\x20"
+
+        is_final, begin, end, interval, num_blocks = struct.unpack('<xx?xxxxiiIH', props.payload[0:21])
+        begin = datetime.fromtimestamp(begin)
+        end   = datetime.fromtimestamp(end)
+        interval = timedelta(seconds=interval)
+        logger.debug(str((is_final, begin, end, interval, num_blocks)))
+
+        ts = begin
+        offset = 21
+        table = []
+        for i in range(num_blocks):
+            num_entries = props.payload[offset]
+            offset += 1
+            row = {'ts': ts}
+            ts = ts + interval
+            for j in range(num_entries):
+                channel_value = Frame.read_channel_value(props.payload, offset)
+                row[channel_value.channel] = channel_value.value
+                offset += 9
+            table.append(row)
+        return table
 
     @classmethod
     def read_channel_value(cls, buf: bytes, offset: int, length=None, status=None):
