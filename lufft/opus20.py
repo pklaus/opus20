@@ -164,7 +164,7 @@ class PickleStore(LogStore):
         return max_ts
 
     def get_device_ids(self):
-        return self._data.keys()
+        return tuple(self._data.keys())
 
     def get_data(self, device_id=None):
         if not device_id: return self._data
