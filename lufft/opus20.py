@@ -5,6 +5,7 @@ import pdb
 import struct
 import time
 import logging
+from datetime import datetime
 
 logger = logging.getLogger(__name__)
 
@@ -324,19 +325,8 @@ class Frame(object):
         assert props.cmd == 0x23 and props.verc == 0x10
         self.assert_status()
         logger.debug("Online Data Request (single channel) (23 10)")
-        channel = props.payload[1] + (props.payload[2] << 8)
-        logger.debug("Channel={}: {}".format(channel, CHANNEL_SPEC[channel]))
-
-        dtype = props.payload[3]
-        logger.debug("DataType=[0x{:02X}]".format(dtype))
-        if dtype == 0x16:
-            value = struct.unpack('<f', props.payload[4:4+4])[0]
-        else:
-            raise NameError("Data type 0x{:02X} not implemented".format(dtype))
-        logger.info("Returned Value: " + str(value))
-
-
-        return value
+        channel_value = Frame.read_channel_value(props.payload, 1, length=7, status=self.status)
+        return channel_value.value
 
     def online_data_request_multiple(self):
         # cmd="2F 10" (online data request, multiple channels)
@@ -356,35 +346,41 @@ class Frame(object):
         values = []
 
         for i in range(num_channels):
-            sub_length = props.payload[offset]
-            logger.debug("SubLen={} ({})".format(sub_length, offset))
-            sub_payload = props.payload[offset:offset+1+sub_length]
-            logger.debug("SubPayload: " + hex_formatter(sub_payload))
-            offset += 1
-
-            sub_status = props.payload[offset]
-            logger.debug("SubStatus={}: ({})".format(sub_status, offset))
-            offset += 1
-            if sub_status != 0: continue
-
-            channel = props.payload[offset] + (props.payload[offset+1] << 8)
-            logger.info("channel: {} ({:04X}) {}".format(channel, channel, CHANNEL_SPEC[channel]))
-            offset += 2
-
-            dtype = props.payload[offset]
-            logger.debug("DataType=[0x{:02X}]".format(dtype))
-            offset += 1
-            if dtype == 0x16:
-                value = struct.unpack('<f', props.payload[offset:offset+4])[0]
-                offset += 4
-            else:
-                raise NameError("Data type 0x{:02X} not implemented".format(dtype))
-            logger.info("Returned Value: " + str(value))
-
-            values.append(value)
+            channel_value = Frame.read_channel_value(props.payload, offset)
+            offset += channel_value.length
+            values.append(channel_value.value)
 
         return values
 
+    @classmethod
+    def read_channel_value(cls, buf: bytes, offset: int, length=None, status=None):
+        if length is None:
+            length = buf[offset]
+            logger.debug("SubLen={} ({})".format(length, offset))
+            logger.debug("SubPayload: " + hex_formatter(buf[offset:offset+1+length]))
+            offset += 1
+
+        if status is None:
+            status = buf[offset]
+            logger.debug("SubStatus={}: ({})".format(status, offset))
+            offset += 1
+            if status != 0: raise FrameValidationException('Bad status of channel value: 0x'+hex(status))
+
+        channel = buf[offset] + (buf[offset+1] << 8)
+        logger.info("channel: {} ({:04X}) {}".format(channel, channel, CHANNEL_SPEC[channel]))
+        offset += 2
+
+        dtype = buf[offset]
+        logger.debug("DataType=[0x{:02X}]".format(dtype))
+        offset += 1
+        if dtype == 0x16:
+            value = struct.unpack('<f', buf[offset:offset+4])[0]
+            offset += 4
+        else:
+            raise NameError("Data type 0x{:02X} not implemented".format(dtype))
+        logger.info("Returned Value: " + str(value))
+
+        return Object(channel=channel, value=value, dtype=dtype, length=length, status=status)
 
 def hex_formatter(raw: bytes):
     return ' '.join('{:02X}'.format(byte) for byte in raw)
