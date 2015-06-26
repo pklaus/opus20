@@ -84,6 +84,11 @@ class Opus20(object):
         answer = self.query_frame(frame)
         self.available_channels = answer.available_channels()
 
+    def request_channel_properties(self, channel: int):
+        query_frame = Frame.from_cmd_and_payload(0x31, b"\x30" + struct.pack('<H', channel))
+        answer_frame = self.query_frame(query_frame)
+        return answer_frame.channel_properties()
+
     def request_device_status(self):
         frame = Frame.from_cmd_and_payload(0x31, b"\x60")
         answer = self.query_frame(frame)
@@ -337,7 +342,7 @@ class Frame(object):
           Object(cmd=0x31, payload_check=[0x00, 0x17,], payload_length=None, name='channel group list answer'),
           #
           Object(cmd=0x31, payload_check=[0x30,],       payload_length=   3, name='information on specific channel request'),
-          Object(cmd=0x31, payload_check=[0x00, 0x30,], payload_length=  85, name='information on specific channel answer'),
+          Object(cmd=0x31, payload_check=[0x00, 0x30,], payload_length=  85, name='information on specific channel answer',     func=self.channel_properties),
           #
           Object(cmd=0x31, payload_check=[0x10,],       payload_length=   1, name='advanced status request 0x10 (?)'),
           Object(cmd=0x31, payload_check=[0x00, 0x10,], payload_length=None, name='advanced status answer 0x10 (?)'),
@@ -423,6 +428,20 @@ class Frame(object):
                 continue
             channels.append(channel)
         return channels
+
+    def channel_properties(self):
+        props = self.props
+        assert len(props.payload) == 85
+        assert props.cmd == 0x31 and props.verc == 0x10
+        assert props.payload[0:2] == b"\x00\x30"
+        channel, group = struct.unpack('<HB', props.payload[2:2+2+1])
+        name = props.payload[5:5+40].decode('ascii').replace('\x00','').strip()
+        unit = props.payload[45:45+30].decode('utf-16-le').replace('\x00','').strip()
+        KIND_MAP = {0x10: 'CUR', 0x11: 'MIN', 0x12: 'MAX', 0x13: 'AVG'}
+        kind = KIND_MAP[props.payload[75]]
+        assert props.payload[76] == 0x16
+        min, max = struct.unpack('<ff', props.payload[77:85])
+        return Object(channel=channel, name=name, group=group, unit=unit, kind=kind, min=min, max=max)
 
     def online_data_request_single(self):
         # cmd="23 10" (online data request, one channel)
