@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 
 import socket
+import select
 import pdb
 import struct
 import time
@@ -14,14 +15,41 @@ class Opus20(object):
 
     def __init__(self, host, port=52015, timeout=1.5):
 
+        self.s = None
+
         self.host = host
         self.port = port
-
-        self.s = socket.create_connection((self.host, self.port), timeout)
+        self.timeout = timeout
 
         self.request_supported_channels()
-
         self.request_device_status()
+        self.disconnect()
+
+    def connect(self):
+        self.s = socket.create_connection((self.host, self.port), self.timeout)
+
+    def disconnect(self):
+        try:
+            # 0 = done receiving, 1 = done sending, 2 = both
+            self.s.shutdown(2)
+        except:
+            pass
+        try:
+            self.s.close()
+        except:
+            pass
+        self.s = None
+
+    @property
+    def connected(self):
+        if not self.s: return False
+        try:
+            ready_to_read, ready_to_write, in_error = \
+                select.select([self.s,], [self.s,], [], 5)
+        except select.error:
+            self.disconnect()
+            return False
+        return True
 
     def request_supported_channels(self):
         frame = Frame.from_cmd_and_payload(0x31, b"\x16")
@@ -65,6 +93,7 @@ class Opus20(object):
         return self.query_bytes(frame.data)
 
     def query_bytes(self, data : bytes):
+        if not self.connected: self.connect()
         logger.debug("Sending the following {} bytes now: {}".format(len(data), hex_formatter(data)))
         frame = None
         num_tries = 3
@@ -87,9 +116,6 @@ class Opus20(object):
         if not frame.props: raise NameError("Couldn't get a valid answer.")
         logger.debug("Received the following {} bytes as answer: {}".format(len(frame.data), hex_formatter(frame.data)))
         return frame
-
-    def close(self):
-        self.s.close()
 
 class Opus20Exception(NameError):
     """ An exception concerning Opu20 """

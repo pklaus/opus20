@@ -64,10 +64,7 @@ def main():
         parser.error("Could not connect to host {}: {}".format(args.host, e))
 
     finally:
-        try:
-            o20.close()
-        except:
-            pass
+        o20.disconnect()
     end = clock()
     logger.info("script running time (net): {:.6f} seconds.".format(end-start))
 
