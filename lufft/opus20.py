@@ -55,7 +55,7 @@ class Opus20(object):
             num_tries -= 1
             logger.warning("remaining tries: {}".format(num_tries))
         if not frame: raise NameError("Couldn't get a valid answer.")
-        logger.info("Received the following {} bytes as answer: {}".format(len(data), hex_formatter(data)))
+        logger.info("Received the following {} bytes as answer: {}".format(len(frame.data), hex_formatter(frame.data)))
         return frame
 
     def close(self):
