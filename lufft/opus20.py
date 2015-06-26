@@ -65,7 +65,7 @@ class Opus20(object):
         return self.query_bytes(frame.data)
 
     def query_bytes(self, data : bytes):
-        logger.info("Sending the following {} bytes now: {}".format(len(data), hex_formatter(data)))
+        logger.debug("Sending the following {} bytes now: {}".format(len(data), hex_formatter(data)))
         frame = None
         num_tries = 3
         while num_tries:
@@ -76,7 +76,6 @@ class Opus20(object):
                 frame.validate()
                 break
             except IncompleteDataException:
-                logger.info("received incomplete data; trying to get the remaining bytes.")
                 answer += self.s.recv(1024)
                 frame = Frame(answer)
                 frame.validate()
@@ -85,8 +84,8 @@ class Opus20(object):
                 logger.warning("The frame couldn't be validated: " + str(e))
             num_tries -= 1
             logger.warning("remaining tries: {}".format(num_tries))
-        if not frame: raise NameError("Couldn't get a valid answer.")
-        logger.info("Received the following {} bytes as answer: {}".format(len(frame.data), hex_formatter(frame.data)))
+        if not frame.props: raise NameError("Couldn't get a valid answer.")
+        logger.debug("Received the following {} bytes as answer: {}".format(len(frame.data), hex_formatter(frame.data)))
         return frame
 
     def close(self):
@@ -190,7 +189,7 @@ class Frame(object):
         data = self.data
 
         if len(data) < 12:
-            logger.info("message incomplete? Expected at least 12 bytes, got {}. ".format(len(data)))
+            logger.warning("message incomplete? Expected at least 12 bytes, got {}. ".format(len(data)))
             raise IncompleteDataException()
 
         frame_style = None
@@ -213,7 +212,7 @@ class Frame(object):
         logger.debug("length of payload={}".format(length))
         if len(data) < 12 + offset + length:
             # This 'problem' can occur regularly, thus we don't use .warning() but .info()
-            logger.info("message incomplete? Expected {} bytes, got {}. ".format(12+length, len(data)) + str(data))
+            logger.debug("message incomplete? Expected {} bytes, got {}. ".format(12+length, len(data)) + str(data))
             raise IncompleteDataException()
 
         # stx ok?
@@ -479,9 +478,9 @@ class Frame(object):
 
         channel = buf[offset] + (buf[offset+1] << 8)
         if channel in CHANNEL_SPEC:
-            logger.info("channel: {} ({:04X}) {}".format(channel, channel, CHANNEL_SPEC[channel]['name']))
+            logger.debug("channel: {} ({:04X}) {}".format(channel, channel, CHANNEL_SPEC[channel]['name']))
         else:
-            logger.info("channel: {} ({:04X}) unknown?!".format(channel, channel))
+            logger.debug("channel: {} ({:04X}) unknown?!".format(channel, channel))
         offset += 2
 
         dtype = buf[offset]
@@ -492,7 +491,7 @@ class Frame(object):
             offset += 4
         else:
             raise NameError("Data type 0x{:02X} not implemented".format(dtype))
-        logger.info("Returned Value: " + str(value))
+        logger.debug("Returned Value: " + str(value))
 
         return Object(channel=channel, value=value, dtype=dtype, length=length, status=status)
 

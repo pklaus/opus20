@@ -1,9 +1,8 @@
 
-### Lufft Opus20
+### Lufft OPUS20
 
-This is a *lufft_opus20*, a Python software to query the
-temperature/humidity/... measurement device
-Opus20 produced by Lufft.
+This is a *lufft_opus20*, a Python software to query the temperature/humidity
+logging device OPUS20 produced by Lufft.
 
 #### Requirements
 
@@ -61,7 +60,10 @@ Asking for the value of a channel works like this:
 
 You can also download the values stored on the device and store them in a file:
 
-    opus20_cli localhost download log_data.pkl
+    philipp@lion:~> opus20_cli --loglevel INFO localhost download log_data.pickle
+    INFO:lufft.opus20:Connected to device with ID: EC9C0A06B183
+    INFO:opus_cli:script running time (net): 1.208517 seconds.
+    philipp@lion:~>
 
 #### Author
 
