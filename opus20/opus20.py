@@ -100,6 +100,12 @@ class Opus20(object):
         answer_frame = self.query_frame(query_frame)
         return answer_frame.online_data_request_single()
 
+    def multi_channel_value(self, channels : list):
+        fmt = '<B' + 'H' * len(channels)
+        query_frame = Frame.from_cmd_and_payload(0x2f, struct.pack(fmt, len(channels), *channels))
+        answer_frame = self.query_frame(query_frame)
+        return answer_frame.online_data_request_multiple()
+
     def download_logs(self, start_datetime=None):
         if start_datetime:
             # We convert to UNIX time and add one second
@@ -474,7 +480,7 @@ class Frame(object):
 
         for i in range(num_channels):
             channel_value = Frame.read_channel_value(props.payload, offset)
-            offset += channel_value.length
+            offset += 1 + channel_value.length
             values.append(channel_value.value)
 
         return values
@@ -518,7 +524,7 @@ class Frame(object):
             status = buf[offset]
             logger.debug("SubStatus={}: ({})".format(status, offset))
             offset += 1
-            if status != 0: raise FrameValidationException('Bad status of channel value: 0x'+hex(status))
+            if status != 0: raise FrameValidationException('Bad status of channel value: 0x{:02X}'.format(status))
 
         channel = buf[offset] + (buf[offset+1] << 8)
         if channel in CHANNEL_SPEC:
