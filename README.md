@@ -1,5 +1,5 @@
 
-### OPUS20
+### opus20 - a Python interface to the OPUS20
 
 This is a *opus20*, a Python software to query the temperature / 
 humidity / air pressure logging device OPUS20 produced by Lufft.
