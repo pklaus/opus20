@@ -61,7 +61,7 @@ Asking for the value of a channel works like this:
 You can also download the values stored on the device and store them in a file:
 
     philipp@lion:~> opus20_cli --loglevel INFO localhost download log_data.pickle
-    INFO:lufft.opus20:Connected to device with ID: EC9C0A06B183
+    INFO:opus20.opus20:Connected to device with ID: EC9C0A06B183
     INFO:opus_cli:script running time (net): 1.208517 seconds.
     philipp@lion:~>
 
