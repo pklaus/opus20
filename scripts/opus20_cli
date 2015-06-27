@@ -6,7 +6,7 @@ import time
 import argparse
 import logging
 
-from lufft import Opus20, OPUS20_CHANNEL_SPEC, PickleStore
+from opus20 import Opus20, OPUS20_CHANNEL_SPEC, PickleStore
 
 clock = time.perf_counter
 logger = logging.getLogger('opus_cli')

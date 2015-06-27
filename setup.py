@@ -8,15 +8,15 @@ License: GPLv3
 
 from distutils.core import setup
 
-setup(name='lufft_opus20',
-      version = '0.9.0',
-      description = 'Interface to Lufft Opus20 devices',
+setup(name='opus20',
+      version = '0.9.4',
+      description = 'Interface to Lufft OPUS20 devices',
       long_description = '',
       author = 'Philipp Klaus',
       author_email = 'klaus@physik.uni-frankfurt.de',
       url = '',
       license = 'GPL',
-      packages = ['lufft'],
+      packages = ['opus20'],
       scripts = ['scripts/opus20_cli',],
       zip_safe = True,
       platforms = 'any',

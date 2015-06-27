@@ -1,19 +1,19 @@
 
-### Lufft OPUS20
+### OPUS20
 
-This is a *lufft_opus20*, a Python software to query the temperature/humidity
-logging device OPUS20 produced by Lufft.
+This is a *opus20*, a Python software to query the temperature / 
+humidity / air pressure logging device OPUS20 produced by Lufft.
 
 #### Requirements
 
-*lufft_opus20* depends (only) on Python version 3.3+.
+*opus20* depends (only) on Python version 3.3+.
 I thought about backporting it to Python 2.7+ but it's not done so far.
 
 #### Installing
 
 This package can be installed via pip:
 
-    pip install --upgrade https://github.com/pklaus/lufft_opus20/archive/master.zip
+    pip install --upgrade https://github.com/pklaus/opus20/archive/master.zip
 
 #### Usage
 
