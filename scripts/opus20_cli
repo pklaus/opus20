@@ -6,7 +6,7 @@ import time
 import argparse
 import logging
 
-from opus20 import Opus20, OPUS20_CHANNEL_SPEC, PickleStore
+from opus20 import Opus20, OPUS20_CHANNEL_SPEC, PickleStore, Opus20ConnectionException
 
 clock = time.perf_counter
 logger = logging.getLogger('opus_cli')
@@ -38,6 +38,7 @@ def main():
         logging.basicConfig(level=getattr(logging, args.loglevel.upper()))
 
     start = clock()
+    o20 = None
     try:
         kwargs = {}
         if args.port: kwargs['port'] = args.port
@@ -63,11 +64,15 @@ def main():
             ps.add_data(o20.device_id, log_data)
             ps.persist()
 
-    except ConnectionRefusedError as e:
-        parser.error("Could not connect to host {}: {}".format(args.host, e))
+    except Opus20ConnectionException as e:
+        parser.error(str(e))
 
     finally:
-        o20.disconnect()
+        try:
+            o20.disconnect()
+            o20 = None
+        except:
+            pass
     end = clock()
     logger.info("script running time (net): {:.6f} seconds.".format(end-start))
 

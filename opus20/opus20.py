@@ -25,7 +25,10 @@ class Opus20(object):
         self.request_device_status()
 
     def connect(self):
-        self.s = socket.create_connection((self.host, self.port), self.timeout)
+        try:
+            self.s = socket.create_connection((self.host, self.port), self.timeout)
+        except (ConnectionRefusedError, socket.gaierror) as e:
+            raise Opus20ConnectionException("Connection to host {} could not be established: {}".format(self.host, e))
 
     def disconnect(self):
         try:
@@ -129,6 +132,9 @@ class Opus20(object):
 
 class Opus20Exception(NameError):
     """ An exception concerning Opu20 """
+
+class Opus20ConnectionException(Opus20Exception):
+    """ An Opus20 specific 'could not connect' exception """
 
 class FrameValidationException(Opus20Exception):
     """ received invalid data """
