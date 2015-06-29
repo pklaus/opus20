@@ -142,32 +142,38 @@ class PlotWebServer(Bottle):
         dpi = float(dpi)
         #resample = request.query.resample or '2min'
         measures = request.query.measures
+        right = request.query.right
         if not measures:
             measures = ('temperature', 'relative humidity')
-            right = ('relative humidity')
         else:
             measures = measures.split(',')
-        selected_cols = df.columns
-        right = set()
-        if measures:
-            selected_cols = set()
-            for measure in measures:
-                for col in df.columns:
-                    if measure in col:
-                        selected_cols.add(col)
+        if not right:
+            right = ('relative humidity',)
+        else:
+            right = right.split(',')
+        #selected_cols = df.columns
+        selected_cols = set()
+        for measure in measures:
+            for col in df.columns:
+                if measure in col:
+                    selected_cols.add(col)
+        selected_cols = list(selected_cols)
+        right_cols = set()
         for col in selected_cols:
             for measure in right:
                 if measure in col:
-                    right.add(col)
+                    right_cols.add(col)
+        right_cols = list(right_cols)
         # / End handling URL query variables
 
         fig = plt.figure(num=None, figsize=figsize, facecolor='w', edgecolor='k')
         ax = fig.add_axes([0.2, 0.2, 0.7, 0.7])
 
         #ax = df.ix[:,selected_cols].plot(grid=True, secondary_y=right)
-        df.ix[:,selected_cols].plot(ax=ax, grid=True, secondary_y=right)
-        plt.xlabel('')
-        plt.ylabel('temperature °C')
+        ax = df.ix[:,selected_cols].plot(ax=ax, grid=True, secondary_y=right_cols, x_compat=False)
+        ax.set_xlabel('')
+        ax.set_ylabel('temperature [°C]')
+        plt.ylabel('humidity [%]')
         #plt.title("OPUS20 device: " + device_id)
         ax.set_title("OPUS20 device: " + device_id)
 
