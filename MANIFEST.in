@@ -1,0 +1,2 @@
+recursive-include opus20/webapp/views *
+recursive-include opus20/webapp/static *

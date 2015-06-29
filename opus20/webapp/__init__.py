@@ -1,15 +1,29 @@
 #!/usr/bin/env python
+# -*- coding: utf-8 -*-
 
 # local deps
-from opus20 import Opus20, OPUS20_CHANNEL_SPEC, PickleStore
+from opus20 import Opus20, OPUS20_CHANNEL_SPEC, PickleStore, Object
 
 # std lib
 import logging
+import os
+import time
 
 # external deps
-from bottle import Bottle, request, response
+from bottle import Bottle, request, response, view, static_file, TEMPLATE_PATH, jinja2_view as view
 
 logger = logging.getLogger(__name__)
+
+# Find out where our resource files are located:
+try:
+    from pkg_resources import resource_filename, Requirement
+    PATH = resource_filename("opus20", "webapp")
+except:
+    PATH = './'
+
+TEMPLATE_PATH.insert(0, os.path.join(PATH, 'views'))
+
+clock = time.perf_counter
 
 class PlotWebServer(Bottle):
 
@@ -21,15 +35,63 @@ class PlotWebServer(Bottle):
     }
 
     def __init__(self, host, log_file, **kwargs):
+        if 'debug' in kwargs:
+            self.debug = kwargs['debug']
+            del kwargs['debug']
+        else:
+            self.debug = False
         self.o20 = Opus20(host, **kwargs)
         self.o20.disconnect()
         self.logfile = log_file
         self.ps = PickleStore(log_file)
+        self._current_values_last_call = -1E13
+        self._download_device_data_last_call = -1E13
         super(PlotWebServer, self).__init__()
         self.route('/connected/device', callback = self._connected_device)
         self.route('/list/devices', callback = self._list_devices)
         self.route('/download/<device_id>', callback = self._download_device_data)
         self.route('/plot/<device_id>_history.<fileformat>', callback = self._plot_history)
+        self.route('/static/<filename:path>', callback = self._serve_static)
+        if self.debug: self.route('/debug', callback = self._debug)
+        self.route('/plot', callback = self._plot_page)
+        self.route('/', callback = self._index)
+
+    @view('index.jinja2')
+    def _index(self):
+        return {'current_values': self.current_values, 'active': 'home'}
+
+    @view('plot.jinja2')
+    def _plot_page(self):
+        return {'device_id': self._connected_device(), 'active': 'plot'}
+
+    @property
+    def current_values(self):
+        """ the current values """
+        if  clock() - self._current_values_last_call < 2.0:
+            return self._cached_current_values
+        self._current_values_last_call = clock()
+        cur = Object()
+        values = self.o20.multi_channel_value( [0x0064, 0x006E, 0x00C8, 0x00CD, 0x2724] )
+        cur.temperature =       values[0]
+        cur.dewpoint =          values[1]
+        cur.relative_humidity = values[2]
+        cur.absolute_humidity = values[3]
+        cur.battery_voltage =   values[4]
+        self._cached_current_values = cur
+        return cur
+
+    def _serve_static(self, filename):
+        return static_file(filename, root=os.path.join(PATH, 'static'))
+
+    @view('debug.jinja2')
+    def _debug(self):
+        return {
+          'active': 'debug',
+          'debug_dict': {
+            'self._current_values_last_call': self._current_values_last_call,
+            'self._download_device_data_last_call': self._download_device_data_last_call,
+          }
+        }
 
     def _connected_device(self):
         return self.o20.device_id
@@ -38,6 +100,9 @@ class PlotWebServer(Bottle):
         return dict(devices=self.ps.get_device_ids())
 
     def _download_device_data(self, device_id):
+        if  clock() - self._download_device_data_last_call < 10.0:
+            return {'success': True, 'cached': True}
+        self._download_device_data_last_call = clock()
         try:
             max_ts = self.ps.max_ts()[device_id]
         except KeyError:
@@ -46,6 +111,7 @@ class PlotWebServer(Bottle):
         self.o20.disconnect()
         self.ps.add_data(self.o20.device_id, log_data)
         self.ps.persist()
+        return {'success': True}
 
     def _plot_history(self, device_id, fileformat):
         from io import BytesIO
@@ -89,10 +155,10 @@ class PlotWebServer(Bottle):
                 for col in df.columns:
                     if measure in col:
                         selected_cols.add(col)
+        for col in selected_cols:
             for measure in right:
-                for col in df.columns:
-                    if measure in col:
-                        right.add(col)
+                if measure in col:
+                    right.add(col)
         # / End handling URL query variables
 
         fig = plt.figure(num=None, figsize=figsize, facecolor='w', edgecolor='k')

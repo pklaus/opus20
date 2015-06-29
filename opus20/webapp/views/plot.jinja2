@@ -1,0 +1,17 @@
+{% extends "base.jinja2" %}
+
+{% block title %}Plot{% endblock %}
+
+{% block globals %}
+var device_id = "{{ device_id }}";
+{% endblock %}
+
+{% block content %}
+            <h1 class="cover-heading">Environment History</h1> <br />
+            <p class="lead">
+              <img src="/plot/{{ device_id }}_history.svg?figsize=7,5&measures=temperature,relative humidity&right=humidity" />
+            </p>
+            <p class="lead">
+              <button id="fetchData" class="btn btn-lg btn-default" type="button">Fetch New Data</button>
+            </p>
+{% endblock %}

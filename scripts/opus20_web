@@ -27,6 +27,7 @@ def main():
         kwargs = {}
         if args.port: kwargs['port'] = args.port
         if args.timeout: kwargs['timeout'] = args.timeout
+        kwargs['debug'] = True
         plot_server = PlotWebServer(args.host, '/tmp/opus20-plot-server.pickle', **kwargs)
         plot_server.run(host='0.0.0.0', port=45067, debug=True)
 

@@ -6,7 +6,7 @@ Copyright (c) 2015, Philipp Klaus. All rights reserved.
 License: GPLv3
 """
 
-from distutils.core import setup
+from setuptools import setup
 
 setup(name='opus20',
       version = '0.9.4',
@@ -18,6 +18,7 @@ setup(name='opus20',
       license = 'GPL',
       packages = ['opus20', 'opus20.webapp'],
       scripts = ['scripts/opus20_cli', 'scripts/opus20_web'],
+      include_package_data = True,
       zip_safe = True,
       platforms = 'any',
       keywords = 'Lufft Opus20',

@@ -1,0 +1,17 @@
+{% extends "base.jinja2" %}
+
+{% block title %}Current Status{% endblock %}
+
+{% block content %}
+            <h1 class="cover-heading">Current Status</h1>
+            <p class="lead">
+              <div>Temperature:       {{ current_values.temperature       | round }} °C</div>
+              <div>Dewpoint:          {{ current_values.dewpoint          | round }} °C</div>
+              <div>Relative Humidity: {{ current_values.relative_humidity | round }} %</div>
+              <div>Absolute Humidity: {{ current_values.absolute_humidity | round }} g/m³</div>
+              <div>Battery Voltage:   {{ current_values.battery_voltage   | round }} V</div>
+            </p>
+            <!--<p class="lead">
+              <a href="#" class="btn btn-lg btn-default">Learn more</a>
+            </p>-->
+{% endblock %}
