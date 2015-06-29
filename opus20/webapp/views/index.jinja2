@@ -10,6 +10,8 @@
               <div>Relative Humidity: {{ current_values.relative_humidity | round }} %</div>
               <div>Absolute Humidity: {{ current_values.absolute_humidity | round }} g/m³</div>
               <div>Battery Voltage:   {{ current_values.battery_voltage   | round }} V</div>
+              <br />
+              <div>Date &amp; Time of this information: {{ current_values.ts.isoformat().replace('T', ' - ') }}</div>
             </p>
             <!--<p class="lead">
               <a href="#" class="btn btn-lg btn-default">Learn more</a>

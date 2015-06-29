@@ -8,6 +8,7 @@ from opus20 import Opus20, OPUS20_CHANNEL_SPEC, PickleStore, Object
 import logging
 import os
 import time
+from datetime import datetime
 
 # external deps
 from bottle import Bottle, request, response, view, static_file, TEMPLATE_PATH, jinja2_view as view
@@ -77,6 +78,7 @@ class PlotWebServer(Bottle):
         cur.relative_humidity = values[2]
         cur.absolute_humidity = values[3]
         cur.battery_voltage =   values[4]
+        cur.ts = datetime.now().replace(microsecond=0)
         self._cached_current_values = cur
         return cur
 
