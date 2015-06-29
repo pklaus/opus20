@@ -446,13 +446,11 @@ class Frame(object):
         assert len(props.payload) == 85
         assert props.cmd == 0x31 and props.verc == 0x10
         assert props.payload[0:2] == b"\x00\x30"
-        channel, group = struct.unpack('<HB', props.payload[2:2+2+1])
-        name = props.payload[5:5+40].decode('ascii').replace('\x00','').strip()
-        unit = props.payload[45:45+30].decode('utf-16-le').replace('\x00','').strip()
+        channel, group, name, unit, kind, min, max = struct.unpack('<HB40s30sBxff', props.payload[2:2+83])
+        name = name.decode('ascii').replace('\x00','').strip()
+        unit = unit.decode('utf-16-le').replace('\x00','').strip()
         KIND_MAP = {0x10: 'CUR', 0x11: 'MIN', 0x12: 'MAX', 0x13: 'AVG'}
-        kind = KIND_MAP[props.payload[75]]
-        assert props.payload[76] == 0x16
-        min, max = struct.unpack('<ff', props.payload[77:85])
+        kind = KIND_MAP[kind]
         return Object(channel=channel, name=name, group=group, unit=unit, kind=kind, min=min, max=max)
 
     def online_data_request_single(self):
