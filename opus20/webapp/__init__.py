@@ -169,7 +169,7 @@ class PlotWebServer(Bottle):
         # / End handling URL query variables
 
         fig = plt.figure(num=None, figsize=figsize, facecolor='w', edgecolor='k')
-        ax = fig.add_axes([0.2, 0.2, 0.7, 0.7])
+        ax = fig.add_axes([0.16, 0.2, 0.7, 0.7])
 
         #ax = df.ix[:,selected_cols].plot(grid=True, secondary_y=right)
         ax = df.ix[:,selected_cols].plot(ax=ax, grid=True, secondary_y=right_cols, x_compat=False)
