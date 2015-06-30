@@ -17,6 +17,7 @@ def main():
     parser.add_argument('--port', '-p', type=int, help='port of the device for TCP connections')
     parser.add_argument('--timeout', '-t', type=float, help='timeout for the TCP connection')
     parser.add_argument('--loglevel', '-l', choices=['CRITICAL', 'ERROR', 'WARNING', 'INFO', 'DEBUG'], help='log level')
+    parser.add_argument('--debug', '-d', action='store_true', help='enable debugging')
     args = parser.parse_args()
 
     if args.loglevel:
@@ -27,9 +28,9 @@ def main():
         kwargs = {}
         if args.port: kwargs['port'] = args.port
         if args.timeout: kwargs['timeout'] = args.timeout
-        kwargs['debug'] = True
+        kwargs['debug'] = args.debug
         plot_server = PlotWebServer(args.host, '/tmp/opus20-plot-server.pickle', **kwargs)
-        plot_server.run(host='0.0.0.0', port=45067, debug=False)
+        plot_server.run(host='0.0.0.0', port=45067, debug=args.debug)
 
     except ConnectionRefusedError as e:
         parser.error("Could not connect to host {}: {}".format(args.host, e))
