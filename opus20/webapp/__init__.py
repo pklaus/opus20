@@ -54,16 +54,16 @@ class PlotWebServer(Bottle):
         self.route('/plot/<device_id>_history.<fileformat>', callback = self._plot_history)
         self.route('/static/<filename:path>', callback = self._serve_static)
         if self.debug: self.route('/debug', callback = self._debug)
-        self.route('/plot', callback = self._plot_page)
+        self.route('/plots', callback = self._plots_page)
         self.route('/', callback = self._index)
 
     @view('index.jinja2')
     def _index(self):
-        return {'current_values': self.current_values, 'active': 'home'}
+        return {'current_values': self.current_values, 'active': 'status'}
 
-    @view('plot.jinja2')
-    def _plot_page(self):
-        return {'device_id': self._connected_device(), 'active': 'plot'}
+    @view('plots.jinja2')
+    def _plots_page(self):
+        return {'device_id': self._connected_device(), 'active': 'plots'}
 
     @property
     def current_values(self):
@@ -129,6 +129,9 @@ class PlotWebServer(Bottle):
         df.columns = [OPUS20_CHANNEL_SPEC[col]['name'] for col in df.columns]
 
         # Handling of URL query variables
+        color = request.query.get('color', 'b,m,y,r,g,k').split(',')
+        ylabel =  request.query.get('ylabel',  'temperature [°C]')
+        y2label = request.query.get('y2label', 'humidity [%]')
         q_range = request.query.range
         if q_range:
             if ',' in q_range:
@@ -144,12 +147,12 @@ class PlotWebServer(Bottle):
         dpi = float(dpi)
         #resample = request.query.resample or '2min'
         measures = request.query.measures
-        right = request.query.right
         if not measures:
             measures = ('temperature', 'relative humidity')
         else:
             measures = measures.split(',')
-        if not right:
+        right = request.query.get('right', None)
+        if right is None:
             right = ('relative humidity',)
         else:
             right = right.split(',')
@@ -169,18 +172,19 @@ class PlotWebServer(Bottle):
         # / End handling URL query variables
 
         fig, ax = plt.subplots(figsize=figsize)
-        ax = df.ix[:,selected_cols].plot(ax=ax, grid=True, secondary_y=right_cols, x_compat=True)
+        if len(selected_cols) == 1: color = color[0]
+        df.ix[:,selected_cols].plot(ax=ax, color=color, grid=True, secondary_y=right_cols, x_compat=True)
         ax.set_xlabel('')
-        ax.set_ylabel('temperature [°C]')
-        plt.ylabel('humidity [%]')
+        ax.set_ylabel(ylabel)
+        if len(right_cols): plt.ylabel(y2label)
         ax.set_title("OPUS20 device: " + device_id)
         #start, end = ax.get_xlim()
         #ax.xaxis.set_ticks(np.arange(start, end, 1.0))
-        ax.xaxis.grid(True, which="minor")
+        #ax.xaxis.grid(True, which="minor")
         #ax.legend()
 
         io = BytesIO()
-        fig.savefig(io, format=fileformat, dpi=dpi)
+        plt.savefig(io, format=fileformat, dpi=dpi)
         plt.close()
         response.content_type = self.MIME_MAP[fileformat]
         return io.getvalue()

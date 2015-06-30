@@ -9,7 +9,7 @@
     <meta name="author" content="">
     <link rel="icon" href="favicon.ico">
 
-    <title>{% block title %}{% endblock %} - opus20</title>
+    <title>{% block title %}{% endblock %} - opus20 Environmental Monitoring</title>
 
     <!-- Latest compiled and minified CSS -->
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap.min.css">
@@ -27,42 +27,39 @@
 
   <body>
 
-    <div class="site-wrapper">
+    <!-- Fixed navbar -->
+    <nav class="navbar navbar-default navbar-fixed-top">
+      <div class="container">
+        <div class="navbar-header">
+          <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar" aria-expanded="false" aria-controls="navbar">
+            <span class="sr-only">Toggle navigation</span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+          </button>
+          <a class="navbar-brand {{'active' if active == 'status'}}" href="/">opus20 Status</a>
+        </div>
+        <div id="navbar" class="navbar-collapse collapse">
+          <ul class="nav navbar-nav">
+            <li class="{{'active' if active == 'plots'}}"><a href="/plots">Plots</a></li>
+          </ul>
+          <ul class="nav navbar-nav navbar-right">
+            <li class="{{'active' if active == 'debug'}}"><a href="/debug">Debug</a></li>
+          </ul>
+        </div><!--/.nav-collapse -->
+      </div>
+    </nav>
 
-      <div class="site-wrapper-inner">
+    <div class="container">
 
-        <div class="cover-container">
-
-          <div class="masthead clearfix">
-            <div class="inner">
-              <h3 class="masthead-brand">opus20</h3>
-              <nav>
-                <ul class="nav masthead-nav">
-                  <li class="{{'active' if active == 'home'}}"><a href="/">Home</a></li>
-                  <li class="{{'active' if active == 'plot'}}"><a href="/plot">Plot</a></li>
-                  <li class="{{'active' if active == 'debug'}}"><a href="/debug">Debug</a></li>
-                </ul>
-              </nav>
-            </div>
-          </div>
-
-          <div class="inner cover">
+      <!-- Main component for a primary marketing message or call to action -->
+      <div class="jumbotron">
 
           {% block content %}{% endblock %}
 
-          </div>
-
-          <div class="mastfoot">
-            <div class="inner">
-              <p>This website is provided by <a href="http://github.com/pklaus/opus20">opus20</a>.</p>
-            </div>
-          </div>
-
-        </div>
-
       </div>
 
-    </div>
+    </div> <!-- /container -->
 
     <!-- Bootstrap core JavaScript
     ================================================== -->
