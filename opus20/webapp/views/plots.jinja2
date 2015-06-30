@@ -16,6 +16,6 @@ var device_id = "{{ device_id }}";
               <img src="/plot/{{ device_id }}_history.png?figsize=10,7&measures=relative humidity&right=-&ylabel=humidity [%25]&color=magenta" />
             </p>
             <p class="lead">
-              <button id="fetchData" class="btn btn-lg btn-default" type="button">Fetch New Data</button>
+              <button id="fetchData" class="btn btn-lg btn-default" type="button" data-loading-text="Fetching New Data..." >Fetch New Data</button>
             </p>
 {% endblock %}
