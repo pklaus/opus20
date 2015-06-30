@@ -168,27 +168,15 @@ class PlotWebServer(Bottle):
         right_cols = list(right_cols)
         # / End handling URL query variables
 
-        fig = plt.figure(num=None, figsize=figsize, facecolor='w', edgecolor='k')
-        ax = fig.add_axes([0.16, 0.2, 0.7, 0.7])
-
-        #ax = df.ix[:,selected_cols].plot(grid=True, secondary_y=right)
-        ax = df.ix[:,selected_cols].plot(ax=ax, grid=True, secondary_y=right_cols, x_compat=False)
+        fig, ax = plt.subplots(figsize=figsize)
+        ax = df.ix[:,selected_cols].plot(ax=ax, grid=True, secondary_y=right_cols, x_compat=True)
         ax.set_xlabel('')
         ax.set_ylabel('temperature [°C]')
         plt.ylabel('humidity [%]')
-        #plt.title("OPUS20 device: " + device_id)
         ax.set_title("OPUS20 device: " + device_id)
-
-        #ax = fig.add_subplot(111)
-        #df.ix[:,measure.split(',')].resample(resample).plot(ax=ax)
         #start, end = ax.get_xlim()
         #ax.xaxis.set_ticks(np.arange(start, end, 1.0))
         ax.xaxis.grid(True, which="minor")
-        #if type(q_range) == str:
-        #    ax.set_xlabel(q_range)
-        #else:
-        #    ax.set_xlabel(' - '.join(q_range))
-        #ax.set_ylabel('Power [Watt]')
         #ax.legend()
 
         io = BytesIO()
