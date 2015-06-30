@@ -13,7 +13,7 @@ logger = logging.getLogger(__name__)
 
 class Opus20(object):
 
-    def __init__(self, host, port=52015, timeout=1.5):
+    def __init__(self, host, port=52015, timeout=5.):
 
         self.s = None
 
