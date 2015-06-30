@@ -29,6 +29,7 @@ clock = time.perf_counter
 class PlotWebServer(Bottle):
 
     DPI = 72
+    TPL_GLOBALS = {}
     MIME_MAP = {
       'pdf': 'application/pdf',
       'png': 'image/png',
@@ -41,6 +42,7 @@ class PlotWebServer(Bottle):
             del kwargs['debug']
         else:
             self.debug = False
+        self.TPL_GLOBALS['debug_mode'] = self.debug
         self.o20 = Opus20(host, **kwargs)
         self.o20.disconnect()
         self.logfile = log_file
@@ -53,22 +55,37 @@ class PlotWebServer(Bottle):
         self.route('/download/<device_id>', callback = self._download_device_data)
         self.route('/plot/<device_id>_history.<fileformat>', callback = self._plot_history)
         self.route('/static/<filename:path>', callback = self._serve_static)
-        if self.debug: self.route('/debug', callback = self._debug)
+        if self.debug: self.route('/debug', callback = self._debug_page)
         self.route('/plots', callback = self._plots_page)
-        self.route('/about', callback = self._about)
-        self.route('/', callback = self._index)
+        self.route('/about', callback = self._about_page)
+        self.route('/', callback = self._status_page)
+
+    def _atg(self, vals):
+        """ Add template globals """
+        vals.update(self.TPL_GLOBALS)
+        return vals
 
     @view('index.jinja2')
-    def _index(self):
-        return {'current_values': self.current_values, 'active': 'status'}
+    def _status_page(self):
+        return self._atg({'current_values': self.current_values, 'active': 'status'})
 
     @view('about.jinja2')
-    def _about(self):
-        return {}
+    def _about_page(self):
+        return self._atg({'active': 'about'})
 
     @view('plots.jinja2')
     def _plots_page(self):
-        return {'device_id': self._connected_device(), 'active': 'plots'}
+        return self._atg({'device_id': self._connected_device(), 'active': 'plots'})
+
+    @view('debug.jinja2')
+    def _debug_page(self):
+        return self._atg({
+          'active': 'debug',
+          'debug_dict': {
+            'self._current_values_last_call': self._current_values_last_call,
+            'self._download_device_data_last_call': self._download_device_data_last_call,
+          }
+        })
 
     @property
     def current_values(self):
@@ -90,16 +107,6 @@ class PlotWebServer(Bottle):
 
     def _serve_static(self, filename):
         return static_file(filename, root=os.path.join(PATH, 'static'))
-
-    @view('debug.jinja2')
-    def _debug(self):
-        return {
-          'active': 'debug',
-          'debug_dict': {
-            'self._current_values_last_call': self._current_values_last_call,
-            'self._download_device_data_last_call': self._download_device_data_last_call,
-          }
-        }
 
     def _connected_device(self):
         return self.o20.device_id

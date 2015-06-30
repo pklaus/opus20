@@ -9,7 +9,7 @@
     <meta name="author" content="">
     <link rel="icon" href="favicon.ico">
 
-    <title>{% block title %}{% endblock %} - opus20 Environmental Monitoring</title>
+    <title>{% block title %}{% endblock %} - opus20</title>
 
     <!-- Latest compiled and minified CSS -->
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap.min.css">
@@ -44,7 +44,9 @@
             <li class="{{'active' if active == 'plots'}}"><a href="/plots">Plots</a></li>
           </ul>
           <ul class="nav navbar-nav navbar-right">
+            {% if debug_mode %}
             <li class="{{'active' if active == 'debug'}}"><a href="/debug">Debug</a></li>
+            {% endif %}
             <li class="{{'active' if active == 'about'}}"><a href="/about">About</a></li>
           </ul>
         </div><!--/.nav-collapse -->
