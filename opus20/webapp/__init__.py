@@ -65,7 +65,7 @@ class PlotWebServer(Bottle):
         vals.update(self.TPL_GLOBALS)
         return vals
 
-    @view('index.jinja2')
+    @view('status.jinja2')
     def _status_page(self):
         return self._atg({'current_values': self.current_values, 'active': 'status'})
 
