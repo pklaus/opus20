@@ -55,11 +55,16 @@ class PlotWebServer(Bottle):
         self.route('/static/<filename:path>', callback = self._serve_static)
         if self.debug: self.route('/debug', callback = self._debug)
         self.route('/plots', callback = self._plots_page)
+        self.route('/about', callback = self._about)
         self.route('/', callback = self._index)
 
     @view('index.jinja2')
     def _index(self):
         return {'current_values': self.current_values, 'active': 'status'}
+
+    @view('about.jinja2')
+    def _about(self):
+        return {}
 
     @view('plots.jinja2')
     def _plots_page(self):
