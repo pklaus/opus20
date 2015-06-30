@@ -9,6 +9,13 @@ humidity / air pressure logging device OPUS20 produced by Lufft.
 *opus20* depends (only) on Python version 3.3+.
 I thought about backporting it to Python 2.7+ but it's not done so far.
 
+The web interface requires a couple of Python packages:
+
+    pip install jinja2 bottle matplotlib pandas numpy
+
+Installing matplotlib may also require you to install
+the python development package (for Python 3).
+
 #### Installing
 
 This package can be installed via pip:
