@@ -73,6 +73,7 @@ class PlotWebServer(Bottle):
         self._current_values_last_call = clock()
         cur = Object()
         values = self.o20.multi_channel_value( [0x0064, 0x006E, 0x00C8, 0x00CD, 0x2724] )
+        cur.device_id =         self.o20.device_id
         cur.temperature =       values[0]
         cur.dewpoint =          values[1]
         cur.relative_humidity = values[2]
