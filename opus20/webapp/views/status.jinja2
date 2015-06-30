@@ -6,11 +6,11 @@
             <h1 class="cover-heading">Current Status</h1>
             <p class="lead">
               <div>Device ID:         {{ current_values.device_id                 }}</div>
-              <div>Temperature:       {{ current_values.temperature       | round }} °C</div>
-              <div>Dewpoint:          {{ current_values.dewpoint          | round }} °C</div>
-              <div>Relative Humidity: {{ current_values.relative_humidity | round }} %</div>
-              <div>Absolute Humidity: {{ current_values.absolute_humidity | round }} g/m³</div>
-              <div>Battery Voltage:   {{ current_values.battery_voltage   | round }} V</div>
+              <div>Temperature:       {{ current_values.temperature       | round(1) }} °C</div>
+              <div>Dewpoint:          {{ current_values.dewpoint          | round(1) }} °C</div>
+              <div>Relative Humidity: {{ current_values.relative_humidity | round(1) }} %</div>
+              <div>Absolute Humidity: {{ current_values.absolute_humidity | round(1) }} g/m³</div>
+              <div>Battery Voltage:   {{ current_values.battery_voltage   | round(1) }} V</div>
               <br />
               <div>Date &amp; Time of this information: {{ current_values.ts.isoformat().replace('T', ' - ') }}</div>
             </p>
