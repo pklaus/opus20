@@ -2,17 +2,55 @@
 
 {% block title %}Status{% endblock %}
 
+{% block top_javascript %}
+
+var update_every_ms = 2050;
+var device_id = "{{ device_id }}";
+
+{% endblock %}
+
+{% block bottom_javascript %}
+
+function updateStatus() {
+  $.getJSON("/status/" + device_id, function( data ) {
+    $("#device_id").text(data.status.device_id);
+    $("#temperature").text(data.status.temperature.toFixed(1));
+    $("#dewpoint").text(data.status.dewpoint.toFixed(1));
+    $("#relative_humidity").text(data.status.relative_humidity.toFixed(1));
+    $("#absolute_humidity").text(data.status.absolute_humidity.toFixed(1));
+    $("#battery_voltage").text(data.status.battery_voltage.toFixed(1));
+    $("#timestamp").text(data.status.ts.replace('T', ' - '));
+  });
+};
+
+function timedUpdate() {
+  updateStatus();
+  setTimeout(function() {
+    timedUpdate();
+  }, update_every_ms);
+};
+
+$(function() {
+  // on page load
+  updateStatus();
+  setTimeout(function() {
+    timedUpdate();
+  }, update_every_ms);
+});
+
+{% endblock %}
+
 {% block content %}
             <h1 class="cover-heading">Current Status</h1>
             <p class="lead">
-              <div>Device ID:         {{ current_values.device_id                 }}</div>
-              <div>Temperature:       {{ current_values.temperature       | round(1) }} °C</div>
-              <div>Dewpoint:          {{ current_values.dewpoint          | round(1) }} °C</div>
-              <div>Relative Humidity: {{ current_values.relative_humidity | round(1) }} %</div>
-              <div>Absolute Humidity: {{ current_values.absolute_humidity | round(1) }} g/m³</div>
-              <div>Battery Voltage:   {{ current_values.battery_voltage   | round(1) }} V</div>
+              <div>Device ID:                 <span id="device_id">{{ current_values.device_id                    }}</span>      </div>
+              <div>Temperature:             <span id="temperature">{{ current_values.temperature       | round(1) }}</span> °C   </div>
+              <div>Dewpoint:                   <span id="dewpoint">{{ current_values.dewpoint          | round(1) }}</span> °C   </div>
+              <div>Relative Humidity: <span id="relative_humidity">{{ current_values.relative_humidity | round(1) }}</span> %    </div>
+              <div>Absolute Humidity: <span id="absolute_humidity">{{ current_values.absolute_humidity | round(1) }}</span> g/m³ </div>
+              <div>Battery Voltage:     <span id="battery_voltage">{{ current_values.battery_voltage   | round(1) }}</span> V    </div>
               <br />
-              <div>Date &amp; Time of this information: {{ current_values.ts.isoformat().replace('T', ' - ') }}</div>
+              <div>Date &amp; Time of this information: <span id="timestamp">{{ current_values.ts.isoformat().replace('T', ' - ') }}</span></div>
             </p>
             <!--<p class="lead">
               <a href="#" class="btn btn-lg btn-default">Learn more</a>

@@ -68,7 +68,7 @@ class PlotWebServer(Bottle):
 
     @view('status.jinja2')
     def _status_page(self):
-        return self._atg({'current_values': self.current_values, 'active': 'status'})
+        return self._atg({'device_id': self._connected_device, 'current_values': self.current_values, 'active': 'status'})
 
     @view('about.jinja2')
     def _about_page(self):
