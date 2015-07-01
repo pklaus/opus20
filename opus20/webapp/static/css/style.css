@@ -13,3 +13,7 @@ body {
 pre {
   text-align: left;
 }
+
+.chart {
+  margin: 10px 20px;
+}
