@@ -35,14 +35,21 @@ $(function(){
 
 {% block content %}
             <h1 class="cover-heading">Plots of the Environment Values</h1> <br />
+            <h3>Combined Plot</h3>
+            <p class="lead">
+              <img class="chart" src="/plot/{{ device_id }}_history.png?figsize=10,7&measures=temperature,relative humidity&right=humidity" />
+            </p>
             <h3>Temperature Plot</h3>
             <p class="lead">
-              <!-- <img class="chart" src="/plot/{{ device_id }}_history.png?figsize=10,7&measures=temperature,relative humidity&right=humidity" /> -->
               <img class="chart" src="/plot/{{ device_id }}_history.png?figsize=10,7&measures=temperature&color=blue" />
             </p>
             <h3>Relative Humidity Plot</h3>
             <p class="lead">
               <img class="chart" src="/plot/{{ device_id }}_history.png?figsize=10,7&measures=relative humidity&right=-&ylabel=humidity [%25]&color=magenta" />
+            </p>
+            <h3>Absolute Humidity Plot</h3>
+            <p class="lead">
+              <img class="chart" src="/plot/{{ device_id }}_history.png?figsize=10,7&measures=absolute humidity&right=-&ylabel=humidity [g%2Fm%B3]&color=cyan" />
             </p>
             <p class="lead">
               <button id="fetchData" class="btn btn-lg btn-default" type="button">Fetch New Data</button>
