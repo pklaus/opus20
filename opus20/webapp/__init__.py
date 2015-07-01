@@ -186,18 +186,16 @@ class PlotWebServer(Bottle):
         else:
             right = right.split(',')
         #selected_cols = df.columns
-        selected_cols = set()
+        selected_cols = []
         for measure in measures:
             for col in df.columns:
                 if measure in col:
-                    selected_cols.add(col)
-        selected_cols = list(selected_cols)
-        right_cols = set()
+                    if col not in selected_cols: selected_cols.append(col)
+        right_cols = []
         for col in selected_cols:
             for measure in right:
                 if measure in col:
-                    right_cols.add(col)
-        right_cols = list(right_cols)
+                    if col not in right_cols: right_cols.append(col)
         # / End handling URL query variables
 
         fig, ax = plt.subplots(figsize=figsize)
