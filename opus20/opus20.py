@@ -8,7 +8,10 @@ import time
 import logging
 from datetime import datetime, timedelta
 import pickle
+import threading
+import ipaddress
 
+clock = time.perf_counter
 logger = logging.getLogger(__name__)
 
 class Opus20(object):
@@ -405,7 +408,7 @@ class Frame(object):
         FRAME_KINDS = [
           #
           Object(cmd=0x1E, payload_check=[],            payload_length=   0, name='network discovery request'),
-          Object(cmd=0x1E, payload_check=[],            payload_length=  35, name='network discovery answer'),
+          Object(cmd=0x1E, payload_check=[0x00],        payload_length=  35, name='network discovery answer',                   func=self.discovery_result),
           #
           Object(cmd=0x23, payload_check=[],            payload_length=   2, name='online single channel request'),
           Object(cmd=0x23, payload_check=[0x00,],       payload_length=   8, name='online single channel answer',               func=self.online_data_request_single),
@@ -492,6 +495,20 @@ class Frame(object):
                     break
             if payload_matches: return knd
         return None
+
+    def discovery_result(self):
+        props = self.props
+
+        assert props.cmd == 0x1E
+        assert len(props.payload) == 35
+
+        dr = Object()
+        dr.device_id = ''.join("{:02X}".format(byte) for byte in props.payload[1:1+6])
+        dr.ip = ipaddress.IPv4Address(props.payload[9:9+4])
+        dr.gw = ipaddress.IPv4Address(props.payload[13:13+4])
+        dr.mask = ipaddress.IPv4Address(props.payload[17:17+4])
+        dr.net = ipaddress.IPv4Network('{}/{}'.format(dr.ip, dr.mask), strict=False)
+        return dr.to_dict()
 
     def available_channels(self):
         # cmd="31 10" (which channels are available in device?)
@@ -627,6 +644,54 @@ class Frame(object):
 def hex_formatter(raw: bytes):
     return ' '.join('{:02X}'.format(byte) for byte in raw)
 
+
+class UdpListenerThread(threading.Thread):
+    DETECTION_TIMEOUT = 0.25
+    def __init__ (self,port,callback):
+        """
+        Listens for packages via UDP. Calls callback for each response.
+            callback([frm, (ip, port), answer_time])
+        """
+        threading.Thread.__init__(self)
+        self.__port = port
+        self.__callback = callback
+        self.__start_time = clock()
+    def run(self):
+        addr = ('', self.__port)
+        UDPinsock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        UDPinsock.bind(addr)
+        UDPinsock.settimeout(self.DETECTION_TIMEOUT)
+        while True:
+            try:
+                """ Receive messages """
+                data, addr = UDPinsock.recvfrom(1024)
+                # keep timestamp of arriving package
+                answer_time = clock()
+            except:
+                """ server timeout """
+                break
+            frm = Frame(data)
+            frm.validate()
+            try:
+                frm.validate()
+            except:
+                logger.warning("received a response that didn't validate: " + repr(data))
+            self.__callback((frm, addr, (answer_time - self.__start_time)*1000))
+        UDPinsock.close()
+
+def discover_OPUS20_devices(callback, bind_addr=""):
+    dest = ('<broadcast>',52010)
+    myUDPintsockThread = UdpListenerThread(52005, callback)
+    myUDPintsockThread.start()
+
+    UDPoutsock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    # to allow broadcast communication:
+    UDPoutsock.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)
+    UDPoutsock.bind((bind_addr,0))
+    frm = Frame.from_cmd_and_payload(0x1e, b"")
+    UDPoutsock.sendto(frm.data, dest)
+
+    myUDPintsockThread.join()
 
 def crc16(data : bytes):
     """ Calculates a CRC-16 CCITT checksum. data should be of type bytes() """
