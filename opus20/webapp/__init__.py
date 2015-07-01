@@ -17,7 +17,7 @@ logger = logging.getLogger(__name__)
 
 # Find out where our resource files are located:
 try:
-    from pkg_resources import resource_filename, Requirement
+    from pkg_resources import resource_filename, Requirement, require
     PATH = resource_filename("opus20", "webapp")
 except:
     PATH = './'
@@ -72,7 +72,8 @@ class PlotWebServer(Bottle):
 
     @view('about.jinja2')
     def _about_page(self):
-        return self._atg({'active': 'about'})
+        version = require("opus20")[0].version
+        return self._atg({'active': 'about', 'opus20_version': version})
 
     @view('plots.jinja2')
     def _plots_page(self):
