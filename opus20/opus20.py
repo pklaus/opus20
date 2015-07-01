@@ -691,6 +691,9 @@ class Object(object):
     def __str__(self):
         return repr(self)
 
+    def to_dict(self):
+        return self.__dict__
+
     @classmethod
     def from_dict(cls, d):
         o = Object()
