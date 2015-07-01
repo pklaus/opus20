@@ -98,6 +98,21 @@ class Opus20(object):
         self.device_id = ''.join("{:02X}".format(byte) for byte in answer.props.payload[2:2+6])
         logger.info("Connected to device with ID: " + self.device_id)
 
+    def sync_datetime(self, new_datetime=None, tz_offset=None):
+        if not new_datetime: new_datetime = datetime.now().replace(microsecond=0)
+        if not tz_offset: tz_offset = round((datetime.now() - datetime.utcnow()).total_seconds())
+        offset_sign = '+' if tz_offset >= 0 else '-'
+        offset_hours = abs(tz_offset) // 3600;
+        offset_minutes = (abs(tz_offset) % 3600) // 60;
+        logger.info("Setting date & time on device to {}{:+03}{:02}".format(new_datetime.isoformat(), offset_hours, offset_minutes))
+        new_datetime = int(new_datetime.timestamp())
+        frame = Frame.from_cmd_and_payload(0x27, struct.pack('<ii', new_datetime, tz_offset))
+        answer = self.query_frame(frame)
+        answer.validate()
+        props = answer.props
+        assert props.cmd == 0x27
+        assert props.payload == b"\x00"
+
     def channel_value(self, channel: int):
         query_frame = Frame.from_cmd_and_payload(0x23, struct.pack('<H', channel))
         answer_frame = self.query_frame(query_frame)
