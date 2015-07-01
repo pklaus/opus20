@@ -60,7 +60,8 @@ class PlotWebServer(Bottle):
         self.route('/', callback = self._status_page)
 
     def _atg(self, vals):
-        """ Add template globals """
+        """ Add template globals
+            A wrapper function for the templated routes decorated with a @view() """
         vals.update(self.TPL_GLOBALS)
         return vals
 
