@@ -8,8 +8,8 @@ $(function(){
       type: 'get',
       success: function (response) {
         //console.log('response received');
-        location.reload()
         $btn.button('reset')
+        location.reload()
       }, error: function (response) {
         console.log('ajax request to fetch data failed');
         alert('ajax request to fetch data failed');
