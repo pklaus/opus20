@@ -21,7 +21,7 @@
     <link href="/static/css/style.css" rel="stylesheet">
 
     <script type="text/javascript">
-          {% block javascript %}{% endblock %}
+          {% block top_javascript %}{% endblock %}
     </script>
   </head>
 
@@ -69,6 +69,10 @@
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script>
     <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/js/bootstrap.min.js"></script>
     <script src="/static/js/script.js"></script>
+
+    <script type="text/javascript">
+          {% block bottom_javascript %}{% endblock %}
+    </script>
     <!-- Placed at the end of the document so the pages load faster -->
   </body>
 </html>
