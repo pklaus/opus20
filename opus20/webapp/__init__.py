@@ -52,6 +52,7 @@ class PlotWebServer(Bottle):
         super(PlotWebServer, self).__init__()
         self.route('/list/devices', callback = self._list_devices)
         self.route('/download/<device_id>', callback = self._download_device_data)
+        self.route('/status/<device_id>', callback = self._status_device)
         self.route('/plot/<device_id>_history.<fileformat>', callback = self._plot_history)
         self.route('/static/<filename:path>', callback = self._serve_static)
         if self.debug: self.route('/debug', callback = self._debug_page)
@@ -104,6 +105,15 @@ class PlotWebServer(Bottle):
         cur.ts = datetime.now().replace(microsecond=0)
         self._cached_current_values = cur
         return cur
+
+    def _status_device(self, device_id):
+        assert device_id == self._connected_device
+        status = self.current_values.to_dict()
+        status['ts'] = status['ts'].isoformat()
+        return {
+                'success': True,
+                'status': status,
+               }
 
     def _serve_static(self, filename):
         return static_file(filename, root=os.path.join(PATH, 'static'))
