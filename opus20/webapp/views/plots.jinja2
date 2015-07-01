@@ -6,6 +6,10 @@
 
 var device_id = "{{ device_id }}";
 
+{% endblock %}
+
+{% block bottom_javascript %}
+
 $(function(){
   $('#fetchData').on('click', function(){
     var $btn = $(this);
