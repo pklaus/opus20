@@ -113,6 +113,60 @@ class Opus20(object):
         assert props.cmd == 0x27
         assert props.payload == b"\x00"
 
+    def clear_log(self):
+        frame = Frame.from_cmd_and_payload(0x46, b"")
+        answer = self.query_frame(frame)
+        answer.validate()
+        props = answer.props
+        assert props.cmd == 0x46
+        assert props.payload == b"\x00"
+
+    def set_logging_state(self, enable_logging=True):
+        enable_logging = b"\x01" if enable_logging else b"\x00"
+        frame = Frame.from_cmd_and_payload(0x45, b"\x43" + enable_logging)
+        answer = self.query_frame(frame)
+        answer.validate()
+        props = answer.props
+        assert props.cmd == 0x45
+        assert props.payload == b"\x00"
+
+    def get_logging_state(self):
+        frame = Frame.from_cmd_and_payload(0x44, b"\x43")
+        answer = self.query_frame(frame)
+        answer.validate()
+        props = answer.props
+        assert len(props.payload) == 3
+        errors, sub_cmd, state = struct.unpack('<BB?', props.payload)
+        assert props.cmd == 0x44
+        assert errors == 0x00
+        assert sub_cmd == 0x43
+        return state
+
+    def set_channel_logging_state(self, channel, enable_logging=True):
+        payload = b"\x22" + struct.pack('<H?', channel, enable_logging)
+        frame = Frame.from_cmd_and_payload(0x45, payload)
+        answer = self.query_frame(frame)
+        answer.validate()
+        props = answer.props
+        assert props.cmd == 0x45
+        assert len(props.payload) == 6
+        assert props.payload[0:2] == b"\x00\x22"
+        return struct.unpack('<I', props.payload[2:6])[0]
+
+    def get_channel_logging_state(self, channel):
+        payload = b"\x22" + struct.pack('<H', channel)
+        frame = Frame.from_cmd_and_payload(0x44, payload)
+        answer = self.query_frame(frame)
+        answer.validate()
+        props = answer.props
+        assert len(props.payload) == 5
+        errors, sub_cmd, nch, state = struct.unpack('<BBH?', props.payload)
+        assert props.cmd == 0x44
+        assert errors == 0x00
+        assert sub_cmd == 0x22
+        assert nch == channel
+        return state
+
     def channel_value(self, channel: int):
         query_frame = Frame.from_cmd_and_payload(0x23, struct.pack('<H', channel))
         answer_frame = self.query_frame(query_frame)
