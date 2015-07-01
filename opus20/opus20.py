@@ -692,7 +692,7 @@ class Object(object):
         return repr(self)
 
     def to_dict(self):
-        return self.__dict__
+        return self.__dict__.copy()
 
     @classmethod
     def from_dict(cls, d):
