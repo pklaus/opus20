@@ -50,7 +50,6 @@ class PlotWebServer(Bottle):
         self._current_values_last_call = -1E13
         self._download_device_data_last_call = -1E13
         super(PlotWebServer, self).__init__()
-        self.route('/connected/device', callback = self._connected_device)
         self.route('/list/devices', callback = self._list_devices)
         self.route('/download/<device_id>', callback = self._download_device_data)
         self.route('/plot/<device_id>_history.<fileformat>', callback = self._plot_history)
@@ -75,7 +74,7 @@ class PlotWebServer(Bottle):
 
     @view('plots.jinja2')
     def _plots_page(self):
-        return self._atg({'device_id': self._connected_device(), 'active': 'plots'})
+        return self._atg({'device_id': self._connected_device, 'active': 'plots'})
 
     @view('debug.jinja2')
     def _debug_page(self):
@@ -108,11 +107,17 @@ class PlotWebServer(Bottle):
     def _serve_static(self, filename):
         return static_file(filename, root=os.path.join(PATH, 'static'))
 
+    @property
     def _connected_device(self):
+        """ As long as the webserver can handle only a single
+            OPUS20 device, we return this single one here. """
         return self.o20.device_id
 
     def _list_devices(self):
-        return dict(devices=self.ps.get_device_ids())
+        return {
+                'success': True,
+                'devices': list(set([self._connected_device]) | set(self.ps.get_device_ids()))
+               }
 
     def _download_device_data(self, device_id):
         if  clock() - self._download_device_data_last_call < 10.0:
