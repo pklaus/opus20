@@ -121,6 +121,12 @@ class Opus20(object):
         assert props.cmd == 0x46
         assert props.payload == b"\x00"
 
+    def start_logging(self):
+        self.set_logging_state(True)
+
+    def stop_logging(self):
+        self.set_logging_state(False)
+
     def set_logging_state(self, enable_logging=True):
         enable_logging = b"\x01" if enable_logging else b"\x00"
         frame = Frame.from_cmd_and_payload(0x45, b"\x43" + enable_logging)

@@ -25,14 +25,25 @@ def main():
     parser.add_argument('--timeout', '-t', type=float, help='timeout for the TCP connection')
     parser.add_argument('--loglevel', '-l', choices=['CRITICAL', 'ERROR', 'WARNING', 'INFO', 'DEBUG'], help='log level')
     subparsers = parser.add_subparsers(help='cmd help', dest='cmd')
-    parser_a = subparsers.add_parser('list', help='list all possible channels')
-    parser_b = subparsers.add_parser('get', help='get the value(s) of specific channel(s)')
-    parser_b.add_argument('channel', type=extended_int, nargs='+', help='The selected channel(s)')
-    parser_c = subparsers.add_parser('download', help='download the logs')
-    parser_c.add_argument('persistance_file', help='file to store the logs in')
+    parser_list = subparsers.add_parser('list', help='list all possible channels')
+    parser_get = subparsers.add_parser('get', help='get the value(s) of specific channel(s)')
+    parser_get.add_argument('channel', type=extended_int, nargs='+', help='The selected channel(s)')
+    parser_download = subparsers.add_parser('download', help='download the logs')
+    parser_download.add_argument('persistance_file', help='file to store the logs in')
+    parser_logging = subparsers.add_parser('logging', help='start logging altogether on the device')
+    subsubparsers = parser_logging.add_subparsers(help='Action to perform w/ respect to logging', dest='action')
+    parser_logging_action_status = subsubparsers.add_parser('status', help='Query the current logging status of the device')
+    parser_logging_action_start  = subsubparsers.add_parser('start', help='Start logging altogether on the device')
+    parser_logging_action_stop   = subsubparsers.add_parser('stop', help='Stop logging altogether on the device')
+    parser_logging_action_clear  = subsubparsers.add_parser('clear', help='Clear the log history on the device')
+    parser_enable = subparsers.add_parser('enable', help='enable logging for a specific channel')
+    parser_enable.add_argument('channel', type=extended_int, nargs='+', help='The selected channel(s)')
+    parser_disable = subparsers.add_parser('disable', help='disable logging for a specific channel')
+    parser_disable.add_argument('channel', type=extended_int, nargs='+', help='The selected channel(s)')
     args = parser.parse_args()
 
     if not args.cmd: parser.error('please select a command')
+    if args.cmd == 'logging' and not args.action: parser.error('please select a logging action')
 
     if args.loglevel:
         logging.basicConfig(level=getattr(logging, args.loglevel.upper()))
@@ -63,6 +74,22 @@ def main():
             log_data = o20.download_logs(start_datetime=max_ts)
             ps.add_data(o20.device_id, log_data)
             ps.persist()
+        if args.cmd == 'logging':
+            def logging_in_words(): return 'enabled' if o20.get_logging_state() else 'disabled'
+            if args.action == 'status':
+                print("Logging is currently " + logging_in_words() + ".")
+            elif args.action in ('start', 'stop'):
+                o20.set_logging_state(args.action == 'start')
+                logger.info("Logging is now " + logging_in_words() + ".")
+            elif args.action == 'clear':
+                o20.clear_log()
+                print('Clearing the log now. This will take a couple of minutes.')
+                print('You cannot make requests to the device during that time.')
+                o20.disconnect()
+        if args.cmd in ('enable', 'disable'):
+            enable = args.cmd == 'enable'
+            for channel in args.channel:
+                o20.set_channel_logging_state(enable)
 
     except Opus20ConnectionException as e:
         parser.error(str(e))
