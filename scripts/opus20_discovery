@@ -9,7 +9,7 @@ import functools
 from opus20 import Opus20, OPUS20_CHANNEL_SPEC, PickleStore, Opus20ConnectionException, discover_OPUS20_devices
 
 clock = time.perf_counter
-logger = logging.getLogger('opus_discovery')
+logger = logging.getLogger('opus20_discovery')
 
 def main():
 

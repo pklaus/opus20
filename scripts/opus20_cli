@@ -9,7 +9,7 @@ import logging
 from opus20 import Opus20, OPUS20_CHANNEL_SPEC, PickleStore, Opus20ConnectionException
 
 clock = time.perf_counter
-logger = logging.getLogger('opus_cli')
+logger = logging.getLogger('opus20_cli')
 
 def extended_int(string):
     if string.startswith('0x'):

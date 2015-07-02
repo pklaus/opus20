@@ -7,7 +7,7 @@ from opus20 import PlotWebServer
 import argparse
 import logging
 
-logger = logging.getLogger('opus_web')
+logger = logging.getLogger('opus20_web')
 
 
 def main():
