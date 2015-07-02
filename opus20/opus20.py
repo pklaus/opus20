@@ -110,19 +110,18 @@ class Opus20(object):
         logger.info("Setting date & time on device to {}{:+03}{:02}".format(new_datetime.isoformat(), offset_hours, offset_minutes))
         new_datetime = int(new_datetime.timestamp())
         frame = Frame.from_cmd_and_payload(0x27, struct.pack('<ii', new_datetime, tz_offset))
-        answer = self.query_frame(frame)
+        #answer = self.query_frame(frame)
+        answer = Frame.from_cmd_and_payload(0x27, b"\x00")
         answer.validate()
-        props = answer.props
-        assert props.cmd == 0x27
-        assert props.payload == b"\x00"
+        assert answer.props.cmd == 0x27
+        answer.assert_status()
 
     def clear_log(self):
         frame = Frame.from_cmd_and_payload(0x46, b"")
         answer = self.query_frame(frame)
         answer.validate()
-        props = answer.props
-        assert props.cmd == 0x46
-        assert props.payload == b"\x00"
+        assert answer.props.cmd == 0x46
+        answer.assert_status()
 
     def start_logging(self):
         self.set_logging_state(True)
@@ -135,9 +134,8 @@ class Opus20(object):
         frame = Frame.from_cmd_and_payload(0x45, b"\x43" + enable_logging)
         answer = self.query_frame(frame)
         answer.validate()
-        props = answer.props
-        assert props.cmd == 0x45
-        assert props.payload == b"\x00"
+        assert answer.props.cmd == 0x45
+        answer.assert_status()
 
     def get_logging_state(self):
         frame = Frame.from_cmd_and_payload(0x44, b"\x43")
@@ -145,9 +143,9 @@ class Opus20(object):
         answer.validate()
         props = answer.props
         assert len(props.payload) == 3
-        errors, sub_cmd, state = struct.unpack('<BB?', props.payload)
+        sub_cmd, state = struct.unpack('<xB?', props.payload)
         assert props.cmd == 0x44
-        assert errors == 0x00
+        answer.assert_status()
         assert sub_cmd == 0x43
         return state
 
@@ -159,7 +157,8 @@ class Opus20(object):
         props = answer.props
         assert props.cmd == 0x45
         assert len(props.payload) == 6
-        assert props.payload[0:2] == b"\x00\x22"
+        assert props.payload[1] == 0x22
+        answer.assert_status()
         return struct.unpack('<I', props.payload[2:6])[0]
 
     def get_channel_logging_state(self, channel):
@@ -169,9 +168,9 @@ class Opus20(object):
         answer.validate()
         props = answer.props
         assert len(props.payload) == 5
-        errors, sub_cmd, nch, state = struct.unpack('<BBH?', props.payload)
+        sub_cmd, nch, state = struct.unpack('<xBH?', props.payload)
         assert props.cmd == 0x44
-        assert errors == 0x00
+        answer.assert_status()
         assert sub_cmd == 0x22
         assert nch == channel
         return state
@@ -501,6 +500,7 @@ class Frame(object):
 
         assert props.cmd == 0x1E
         assert len(props.payload) == 35
+        answer.assert_status()
 
         dr = Object()
         dr.device_id = ''.join("{:02X}".format(byte) for byte in props.payload[1:1+6])
@@ -516,7 +516,7 @@ class Frame(object):
         props = self.props
 
         assert props.length >= 3, 'message too short for an answer containing the available channels'
-        assert props.cmd == 0x31 and props.verc == 0x10 and  props.payload[1] == 0x16
+        assert props.cmd == 0x31 and  props.payload[1] == 0x16
         self.assert_status()
 
         logger.debug("Channel Query (31 10 16)")
@@ -536,8 +536,9 @@ class Frame(object):
     def channel_properties(self):
         props = self.props
         assert len(props.payload) == 85
-        assert props.cmd == 0x31 and props.verc == 0x10
-        assert props.payload[0:2] == b"\x00\x30"
+        assert props.cmd == 0x31
+        self.assert_status()
+        assert props.payload[1] == 0x30
         channel, group, name, unit, kind, min, max = struct.unpack('<HB40s30sBxff', props.payload[2:2+83])
         name = name.decode('ascii').replace('\x00','').strip()
         unit = unit.decode('utf-16-le').replace('\x00','').strip()
@@ -551,7 +552,7 @@ class Frame(object):
         props = self.props
 
         assert props.length >= 3, 'message too short for an online data request with a single channel'
-        assert props.cmd == 0x23 and props.verc == 0x10
+        assert props.cmd == 0x23
         self.assert_status()
         logger.debug("Online Data Request (single channel) (23 10)")
         channel_value = Frame.read_channel_value(props.payload, 1, length=7, status=self.status)
@@ -563,7 +564,7 @@ class Frame(object):
         props = self.props
 
         assert props.length >= 3, 'message too short for an online data request with multiple channels'
-        assert props.cmd == 0x2F and props.verc == 0x10
+        assert props.cmd == 0x2F
         self.assert_status()
         logger.debug("Online Data Request (multiple channels) (2F 10)")
 
@@ -585,7 +586,8 @@ class Frame(object):
         props = self.props
 
         assert props.length >= 21, 'message too short for a log data message'
-        assert props.cmd == 0x24 and props.verc == 0x10 and props.payload[0:2] == b"\x00\x20"
+        assert props.cmd == 0x24 and props.payload[1] == 0x20
+        self.assert_status()
 
         is_final, begin, end, interval, num_blocks = struct.unpack('<xx?xxxxiiIH', props.payload[0:21])
         begin = datetime.fromtimestamp(begin)
