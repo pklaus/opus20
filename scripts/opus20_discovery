@@ -34,7 +34,7 @@ def main():
     print("\nTrying to find devices on interface {}...\n".format(args.bind_address))
     discover_OPUS20_devices(callback, bind_addr=args.bind_address)
     for device in found_devices:
-        print("[{answer_time:.2f} ms] Device ID: {device_id}, IP: {ip}, GW: {gw}, Network: {net}".format(**device))
+        print("[{answer_time:.2f} ms] Device ID: {device_id}, IP: {ip}, Gateway: {gw}, Network: {net}".format(**device))
     print("\nFound a total number of {} devices.\n".format(len(found_devices)))
 
     end = clock()
