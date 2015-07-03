@@ -241,6 +241,8 @@ class LogStore(object):
 
 class PickleStore(LogStore):
 
+    PICKLE_VERSION = 2
+
     def __init__(self, pickle_file: str):
         self.pickle_file = pickle_file
 
@@ -271,7 +273,7 @@ class PickleStore(LogStore):
 
     def persist(self):
         with open(self.pickle_file, 'wb') as f:
-            pickle.dump(self._data, f, pickle.HIGHEST_PROTOCOL)
+            pickle.dump(self._data, f, self.PICKLE_VERSION)
 
 class Frame(object):
 
