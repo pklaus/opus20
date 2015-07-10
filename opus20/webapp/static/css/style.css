@@ -17,3 +17,7 @@ pre {
 .chart {
   margin: 10px 20px;
 }
+
+.btn.disabled, .btn[disabled], fieldset[disabled] .btn {
+    cursor: wait;
+}
