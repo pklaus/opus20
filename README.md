@@ -67,10 +67,32 @@ Asking for the value of a channel works like this:
 
 You can also download the values stored on the device and store them in a file:
 
-    philipp@lion:~> opus20_cli --loglevel INFO localhost download log_data.pickle
+    philipp@lion:~> opus20_cli --loglevel INFO 192.168.1.55 download log_data.pickle
     INFO:opus20.opus20:Connected to device with ID: EC9C0A06B183
     INFO:opus_cli:script running time (net): 1.208517 seconds.
     philipp@lion:~>
+
+Here is an overview of all the possible CLI commands:
+
+    # List all possible channels:
+    opus20_cli 192.168.1.55 list
+
+    # Get the values for the specified channels (CUR, MIN, MAX temperature in °C):
+    opus20_cli 192.168.1.55 get 0x0064 0x0078 0x008C
+
+    # Download the latest log data and merge it into a persistant data file:
+    opus20_cli 192.168.1.55 download opus20.PickleStore.p
+
+    # Check if logging in general is enabled on the device:
+    opus20_cli 192.168.1.55 logging status
+    opus20_cli 192.168.1.55 logging start
+    opus20_cli 192.168.1.55 logging stop
+    # Or clear the log:
+    opus20_cli 192.168.1.55 logging clear
+
+    # Enable or disable logging for individual channels:
+    opus20_cli 192.168.1.55 enable  0x0064 0x0078 0x008C
+    opus20_cli 192.168.1.55 disable 0x00CD 0x00E1 0x00F5
 
 #### Author
 

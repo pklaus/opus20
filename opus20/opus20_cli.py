@@ -19,7 +19,7 @@ def extended_int(string):
 
 def main():
 
-    parser = argparse.ArgumentParser(description="CLI for the Lufft OPUS20")
+    parser = argparse.ArgumentParser(description="CLI for the Lufft OPUS20. Note that the subcommands provide their own --help!")
     parser.add_argument('host', help='hostname of the device')
     parser.add_argument('--port', '-p', type=int, help='TCP port of the OPUS20')
     parser.add_argument('--timeout', '-t', type=float, help='Timeout of the TCP connection in seconds')
@@ -30,7 +30,7 @@ def main():
     parser_get.add_argument('channel', type=extended_int, nargs='+', help='The selected channel(s)')
     parser_download = subparsers.add_parser('download', help='download the logs and store them locally')
     parser_download.add_argument('persistance_file', help='file to store the logs in')
-    parser_logging = subparsers.add_parser('logging', help='change or query global logging settings')
+    parser_logging = subparsers.add_parser('logging', help='change or query global logging settings (start, stop, clear)')
     subsubparsers = parser_logging.add_subparsers(help='Action to perform w/ respect to logging', dest='action')
     parser_logging_action_status = subsubparsers.add_parser('status', help='Query the current logging status of the device')
     parser_logging_action_start  = subsubparsers.add_parser('start', help='Start logging altogether on the device')
