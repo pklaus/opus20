@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 # local deps
-from opus20 import PlotWebServer
+from opus20.webapp import PlotWebServer
 
 # std lib
 import argparse

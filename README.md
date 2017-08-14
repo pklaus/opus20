@@ -22,6 +22,10 @@ This package can be installed via pip:
 
     pip install --upgrade https://github.com/pklaus/opus20/archive/master.zip
 
+To install all requirements for the included plot web server, too, run this command instead:
+
+    pip install --upgrade https://github.com/pklaus/opus20/archive/master.zip#egg=opus20[webserver]
+
 #### Usage
 
 The Python package installs a command line tool to query the device
