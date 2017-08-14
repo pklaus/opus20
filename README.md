@@ -4,6 +4,9 @@
 This is a *opus20*, a Python software to query the temperature / 
 humidity / air pressure logging device OPUS20 produced by Lufft.
 
+The source code is [managed on Github: pklaus/opus20](https://github.com/pklaus/opus20).
+The Python package is also [registered on PyPI](https://pypi.python.org/pypi/opus20) for easy installation.
+
 #### Requirements
 
 *opus20* depends (only) on Python version 3.3+.
@@ -18,13 +21,13 @@ the python development package (for Python 3).
 
 #### Installing
 
-This package can be installed via pip:
+This package can be installed via pip directly from PyPI:
 
-    pip install --upgrade https://github.com/pklaus/opus20/archive/master.zip
+    pip install --upgrade opus20
 
 To install all requirements for the included plot web server, too, run this command instead:
 
-    pip install --upgrade https://github.com/pklaus/opus20/archive/master.zip#egg=opus20[webserver]
+    pip install --upgrade opus20[webserver]
 
 #### Usage
 
