@@ -38,7 +38,7 @@ class PlotWebServer(Bottle):
 
     def __init__(self, host, log_file, **kwargs):
         # check for different requirements at object instatiation
-        import matplotlib, jinja2, pandas, numpy, pillow
+        import matplotlib, jinja2, pandas, numpy, PIL
         if 'debug' in kwargs:
             self.debug = kwargs['debug']
             del kwargs['debug']
