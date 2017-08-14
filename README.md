@@ -7,27 +7,21 @@ humidity / air pressure logging device OPUS20 produced by Lufft.
 The source code is [managed on Github: pklaus/opus20](https://github.com/pklaus/opus20).
 The Python package is also [registered on PyPI](https://pypi.python.org/pypi/opus20) for easy installation.
 
-#### Requirements
+#### Requirements and Installation
 
-*opus20* depends (only) on Python version 3.3+.
-I thought about backporting it to Python 2.7+ but it's not done so far.
-
-The web interface requires a couple of Python packages:
-
-    pip install jinja2 bottle matplotlib pandas numpy
-
-Installing matplotlib may also require you to install
-the python development package (for Python 3).
-
-#### Installing
-
-This package can be installed via pip directly from PyPI:
+The only strict requirement for the bare opus20 package is Python version 3.3+.
+Then, the package can be installed via pip directly from PyPI:
 
     pip install --upgrade opus20
 
-To install all requirements for the included plot web server, too, run this command instead:
+The package comes with an (optional) plot web server, too.
+It depends on some more Python packages.
+To install those requirements as well, run this command:
 
     pip install --upgrade opus20[webserver]
+
+This will install further packages like jinja2, bottle, matplotlib, pandas, and numpy.
+(Installing matplotlib may also require you to install the python development package for Python 3.)
 
 #### Usage
 
