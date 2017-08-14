@@ -58,7 +58,10 @@ def main():
 
         if args.cmd == 'list':
             for channel in o20.available_channels:
-                print("Channel {:5d} (0x{:04X}): {name:22s}  unit: {unit:6s} offset: {offset}".format(channel, channel, **OPUS20_CHANNEL_SPEC[channel]))
+                log_enabled = o20.get_channel_logging_state(channel)
+                log_enabled = 'yes' if log_enabled else 'no'
+                fmt = "Channel {:5d} (0x{:04X}): {name:22s}  unit: {unit:4s}  offset: {offset:5s}  logging: {log_enabled}"
+                print(fmt.format(channel, channel, log_enabled=log_enabled, **OPUS20_CHANNEL_SPEC[channel]))
         if args.cmd == 'get':
             if len(args.channel) > 1:
                 for channel in o20.multi_channel_value(args.channel):

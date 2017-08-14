@@ -34,34 +34,34 @@ for current values. It's called `opus20_cli`.
 Here is how to get a list of all available *channels* from the device:
 
     philipp@lion:~> opus20_cli 192.168.1.55 list
-    Channel   100 (0x0064): CUR temperature         unit: °C     offset: ±10.0
-    Channel   120 (0x0078): MIN temperature         unit: °C     offset: ±10.0
-    Channel   140 (0x008C): MAX temperature         unit: °C     offset: ±10.0
-    Channel   160 (0x00A0): AVG temperature         unit: °C     offset: ±10.0
-    Channel   105 (0x0069): CUR temperature         unit: °F     offset: 0.0
-    Channel   125 (0x007D): MIN temperature         unit: °F     offset: 0.0
-    Channel   145 (0x0091): MAX temperature         unit: °F     offset: 0.0
-    Channel   165 (0x00A5): AVG temperature         unit: °F     offset: 0.0
-    Channel   200 (0x00C8): CUR relative humidity   unit: %      offset: ±30.0
-    Channel   220 (0x00DC): MIN relative humidity   unit: %      offset: ±30.0
-    Channel   240 (0x00F0): MAX relative humidity   unit: %      offset: ±30.0
-    Channel   260 (0x0104): AVG relative humidity   unit: %      offset: ±30.0
-    Channel   205 (0x00CD): CUR absolute humidity   unit: g/m³   offset: 0.0
-    Channel   225 (0x00E1): MIN absolute humidity   unit: g/m³   offset: 0.0
-    Channel   245 (0x00F5): MAX absolute humidity   unit: g/m³   offset: 0.0
-    Channel   265 (0x0109): AVG absolute humidity   unit: g/m³   offset: 0.0
-    Channel   110 (0x006E): CUR dewpoint            unit: °C     offset: 0.0
-    Channel   130 (0x0082): MIN dewpoint            unit: °C     offset: 0.0
-    Channel   150 (0x0096): MAX dewpoint            unit: °C     offset: 0.0
-    Channel   170 (0x00AA): AVG dewpoint            unit: °C     offset: 0.0
-    Channel   115 (0x0073): CUR dewpoint            unit: °F     offset: 0.0
-    Channel   135 (0x0087): MIN dewpoint            unit: °F     offset: 0.0
-    Channel   155 (0x009B): MAX dewpoint            unit: °F     offset: 0.0
-    Channel   175 (0x00AF): AVG dewpoint            unit: °F     offset: 0.0
-    Channel 10020 (0x2724): CUR battery voltage     unit: V      offset: 0.0
-    Channel 10040 (0x2738): MIN battery voltage     unit: V      offset: 0.0
-    Channel 10060 (0x274C): MAX battery voltage     unit: V      offset: 0.0
-    Channel 10080 (0x2760): AVG battery voltage     unit: V      offset: 0.0
+    Channel   100 (0x0064): CUR temperature         unit: °C    offset: ±10.0  logging: no
+    Channel   120 (0x0078): MIN temperature         unit: °C    offset: ±10.0  logging: no
+    Channel   140 (0x008C): MAX temperature         unit: °C    offset: ±10.0  logging: no
+    Channel   160 (0x00A0): AVG temperature         unit: °C    offset: ±10.0  logging: yes
+    Channel   105 (0x0069): CUR temperature         unit: °F    offset: 0.0    logging: no
+    Channel   125 (0x007D): MIN temperature         unit: °F    offset: 0.0    logging: no
+    Channel   145 (0x0091): MAX temperature         unit: °F    offset: 0.0    logging: no
+    Channel   165 (0x00A5): AVG temperature         unit: °F    offset: 0.0    logging: no
+    Channel   200 (0x00C8): CUR relative humidity   unit: %     offset: ±30.0  logging: no
+    Channel   220 (0x00DC): MIN relative humidity   unit: %     offset: ±30.0  logging: no
+    Channel   240 (0x00F0): MAX relative humidity   unit: %     offset: ±30.0  logging: no
+    Channel   260 (0x0104): AVG relative humidity   unit: %     offset: ±30.0  logging: yes
+    Channel   205 (0x00CD): CUR absolute humidity   unit: g/m³  offset: 0.0    logging: no
+    Channel   225 (0x00E1): MIN absolute humidity   unit: g/m³  offset: 0.0    logging: no
+    Channel   245 (0x00F5): MAX absolute humidity   unit: g/m³  offset: 0.0    logging: no
+    Channel   265 (0x0109): AVG absolute humidity   unit: g/m³  offset: 0.0    logging: yes
+    Channel   110 (0x006E): CUR dewpoint            unit: °C    offset: 0.0    logging: no
+    Channel   130 (0x0082): MIN dewpoint            unit: °C    offset: 0.0    logging: no
+    Channel   150 (0x0096): MAX dewpoint            unit: °C    offset: 0.0    logging: no
+    Channel   170 (0x00AA): AVG dewpoint            unit: °C    offset: 0.0    logging: yes
+    Channel   115 (0x0073): CUR dewpoint            unit: °F    offset: 0.0    logging: no
+    Channel   135 (0x0087): MIN dewpoint            unit: °F    offset: 0.0    logging: no
+    Channel   155 (0x009B): MAX dewpoint            unit: °F    offset: 0.0    logging: no
+    Channel   175 (0x00AF): AVG dewpoint            unit: °F    offset: 0.0    logging: no
+    Channel 10020 (0x2724): CUR battery voltage     unit: V     offset: 0.0    logging: no
+    Channel 10040 (0x2738): MIN battery voltage     unit: V     offset: 0.0    logging: no
+    Channel 10060 (0x274C): MAX battery voltage     unit: V     offset: 0.0    logging: no
+    Channel 10080 (0x2760): AVG battery voltage     unit: V     offset: 0.0    logging: yes
 
 
 Asking for the value of a channel works like this:
