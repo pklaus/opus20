@@ -6,12 +6,24 @@ Copyright (c) 2015, Philipp Klaus. All rights reserved.
 License: GPLv3
 """
 
-from setuptools import setup
+try:
+    from setuptools import setup
+except ImportError:
+    from distutils.core import setup
+
+try:
+    import pypandoc
+    LDESC = open('README.md', 'r').read()
+    LDESC = pypandoc.convert(LDESC, 'rst', format='md')
+except (ImportError, IOError, RuntimeError) as e:
+    print("Could not create long description:")
+    print(str(e))
+    LDESC = ''
 
 setup(name='opus20',
       version = '1.0.dev',
       description = 'Interface to Lufft OPUS20 devices',
-      long_description = '',
+      long_description = LDESC,
       author = 'Philipp Klaus',
       author_email = 'klaus@physik.uni-frankfurt.de',
       url = '',
